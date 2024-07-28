@@ -22,7 +22,7 @@ var upgrader = websocket.Upgrader{
 func main() {
 	r := mux.NewRouter()
 
-	var durenHandler = duren.NewGameHandler(4)
+	var durenHandler = duren.NewGameHandler(2)
 
 	go durenHandler.BroadcastState()
 

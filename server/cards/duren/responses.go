@@ -55,5 +55,6 @@ type MeResponse struct {
 	Hand       *Hand               `json:"hand"`
 	Role       PlayerResponseRole  `json:"role"`
 	CanConfirm bool                `json:"canConfirm"`
+	CanMove    bool                `json:"canMove"`
 	State      PlayerResponseState `json:"state"`
 }

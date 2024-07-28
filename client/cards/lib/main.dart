@@ -1,7 +1,9 @@
 import 'package:cards/config/config.dart';
+import 'package:cards/games/duren/models/duren_state.dart';
 import 'package:cards/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:cards/games/duren/widgets/duren_game_widget.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   await Config.load();
@@ -19,7 +21,10 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (BuildContext context) => const HomePage(),
-        '/games/duren': (BuildContext context) => const DurenGameWidget(),
+        '/games/duren': (BuildContext context) => ChangeNotifierProvider(
+              create: (context) => DurenStateNotifier(),
+              child: const DurenGameWidget(),
+            ),
       },
     );
   }

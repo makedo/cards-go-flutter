@@ -1,7 +1,44 @@
+import 'dart:convert';
+
 import 'package:cards/models/playing_card.dart';
+import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'duren_state.g.dart';
+
+class DurenStateNotifier with ChangeNotifier {
+  DurenState? durenState;
+
+  void updateFromWebSocket(data) {
+    var serverMessage = jsonDecode(data);
+    durenState = DurenState.fromJson(serverMessage['state']);
+    notifyListeners();
+  }
+
+  void move(PlayingCard card, int? index) {
+    var my = durenState!.my;
+    if (!my.canMove) {
+      return;
+    }
+
+    if (my.role == Role.defender &&
+        index != null &&
+        index < durenState!.table!.cards.length &&
+        durenState!.table!.cards[index].length == 1) {
+      durenState!.table!.cards[index].add(card);
+      durenState!.my.hand!.remove(card);
+      return;
+    }
+
+    if (my.role == Role.attacker) {
+      durenState!.table!.cards.add([card]);
+      durenState!.my.hand!.remove(card);
+      return;
+    }
+
+    notifyListeners();
+  }
+}
 
 enum GameState {
   waiting,
@@ -122,6 +159,7 @@ class Me {
   final Role role;
   final bool canConfirm;
   final PlayerState state;
+  final bool canMove;
 
   Me({
     required this.id,
@@ -129,6 +167,7 @@ class Me {
     required this.role,
     required this.canConfirm,
     required this.state,
+    required this.canMove,
   });
 
   factory Me.fromJson(Map<String, dynamic> json) => _$MeFromJson(json);

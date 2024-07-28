@@ -28,6 +28,7 @@ Map<String, dynamic> _$DurenStateToJson(DurenState instance) =>
 const _$GameStateEnumMap = {
   GameState.waiting: 'waiting',
   GameState.playing: 'playing',
+  GameState.finished: 'finished',
 };
 
 DurenTable _$DurenTableFromJson(Map<String, dynamic> json) => DurenTable(
@@ -89,6 +90,7 @@ Me _$MeFromJson(Map<String, dynamic> json) => Me(
       role: $enumDecode(_$RoleEnumMap, json['role']),
       canConfirm: json['canConfirm'] as bool,
       state: $enumDecode(_$PlayerStateEnumMap, json['state']),
+      canMove: json['canMove'] as bool,
     );
 
 Map<String, dynamic> _$MeToJson(Me instance) => <String, dynamic>{
@@ -97,4 +99,5 @@ Map<String, dynamic> _$MeToJson(Me instance) => <String, dynamic>{
       'role': _$RoleEnumMap[instance.role]!,
       'canConfirm': instance.canConfirm,
       'state': _$PlayerStateEnumMap[instance.state]!,
+      'canMove': instance.canMove,
     };

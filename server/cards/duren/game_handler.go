@@ -42,6 +42,7 @@ func (h *GameHandler) HandleConnection(conn *websocket.Conn) {
 		err := conn.ReadJSON(&data)
 		if err != nil {
 			log.Printf("error: %v", err)
+			writeState(conn, &state, playerId)
 			break
 		}
 
@@ -51,12 +52,14 @@ func (h *GameHandler) HandleConnection(conn *websocket.Conn) {
 			var action ReadyAction
 			if err := decode(data, &action); err != nil {
 				log.Println(err)
+				writeState(conn, &state, playerId)
 				break
 			}
 
 			state, err := h.stateHandler.ready(action)
 			if err != nil {
 				log.Println(err)
+				writeState(conn, &state, playerId)
 				break
 			}
 			h.broadcast <- &state
@@ -64,12 +67,14 @@ func (h *GameHandler) HandleConnection(conn *websocket.Conn) {
 			var action MoveAction
 			if err := decode(data, &action); err != nil {
 				log.Println(err)
+				writeState(conn, &state, playerId)
 				break
 			}
 
 			state, err := h.stateHandler.move(action)
 			if err != nil {
 				log.Println(err)
+				writeState(conn, &state, playerId)
 				break
 			}
 			h.broadcast <- &state
@@ -78,12 +83,14 @@ func (h *GameHandler) HandleConnection(conn *websocket.Conn) {
 			var action TakeAction
 			if err := decode(data, &action); err != nil {
 				log.Println(err)
+				writeState(conn, &state, playerId)
 				break
 			}
 
 			state, err := h.stateHandler.take(action)
 			if err != nil {
 				log.Println(err)
+				writeState(conn, &state, playerId)
 				break
 			}
 			h.broadcast <- &state
@@ -114,13 +121,17 @@ func (h *GameHandler) BroadcastState() {
 
 		//broadcast message to all clients
 		for playerId, client := range h.clients {
-			message := response(state, playerId)
-			spew.Dump(message)
-			writeErr := client.WriteJSON(message)
-			if writeErr != nil {
-				log.Printf("error: %v", writeErr)
-			}
+			writeState(client, state, playerId)
 		}
+	}
+}
+
+func writeState(client *websocket.Conn, state *State, playerId string) {
+	message := response(state, playerId)
+	spew.Dump(message)
+	writeErr := client.WriteJSON(message)
+	if writeErr != nil {
+		log.Printf("error: %v", writeErr)
 	}
 }
 
@@ -148,8 +159,9 @@ func response(state *State, playerId string) *StateResponseMessage {
 		Id:         me.id,
 		Hand:       me.hand,
 		CanConfirm: state.canPlayerConfirm(me),
-		State:      state.getPlayerState(me), // PlayerStateReady if it is in readyPlayers list
+		State:      state.getPlayerState(me),
 		Role:       state.getPlayerRole(me),
+		CanMove:    state.canPlayerMove(me),
 	}
 
 	var playerResponses []*PlayerResponse

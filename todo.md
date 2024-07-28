@@ -8,16 +8,16 @@
 
 - Show player state +
 
-- Before first round ending and not taking - 5 cards max on table
-
 - Lock state when performing action (mutex) +
+
+- Apply move on client before sending server message +
 
 - Ability to reconnect
 - Timer
 - Player lives the game
 
+- Before first round ending and not taking - 5 cards max on table
 
-- Apply move on client before sending server message
 - Waiting screen
 - End game screen
 - End round animation (cards are moving to defender who took cards, or to t)

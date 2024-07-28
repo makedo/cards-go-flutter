@@ -6,6 +6,8 @@ import (
 	"fmt"
 )
 
+const MAX_CARDS_AMOUNT = 6
+
 type GameState string
 
 const (
@@ -167,7 +169,7 @@ func (s *State) startGame(playersAmount int) {
 	copy(s.readyPlayers, s.players)
 
 	for i, player := range s.readyPlayers {
-		player.hand = &Hand{Cards: s.table.deck.Slice(0, 6)}
+		player.hand = &Hand{Cards: s.table.deck.Slice(0, MAX_CARDS_AMOUNT)}
 		//@TODO set player with lowest trump as attaker
 		//@TODO set next as defender
 		if i == 0 {
@@ -219,7 +221,7 @@ func (s *State) moveByAttaker(cardId int) error {
 		return errors.New("moveByAttaker error - card not found in hand")
 	}
 
-	if len(s.table.cards) >= 6 {
+	if len(s.table.cards) >= MAX_CARDS_AMOUNT {
 		return errors.New("moveByAttaker error - amount of card rows on table is more than 6")
 	}
 
@@ -370,7 +372,7 @@ func (s *State) giveCardsFromDeckToPlayersStaringFromAttaker() {
 	for i := 0; i <= playerCount; i++ {
 		playerIndex := (*attakerIndex + i) % playerCount
 		player := s.readyPlayers[playerIndex]
-		for s.table.deck.Len() > 0 && player.hand.len() < 6 {
+		for s.table.deck.Len() > 0 && player.hand.len() < MAX_CARDS_AMOUNT {
 			player.hand.Cards = append(player.hand.Cards, s.table.deck.Pop())
 		}
 	}
@@ -430,6 +432,18 @@ func (s *State) getPlayerRole(player *Player) PlayerResponseRole {
 func (s *State) canPlayerConfirm(player *Player) bool {
 	if player == s.attaker {
 		return !player.confirmed && !s.table.isEmpty() && (s.table.areAllCardsCovered() || s.defender.confirmed)
+	}
+
+	if player == s.defender {
+		return !player.confirmed && !s.table.isEmpty() && !s.table.areAllCardsCovered()
+	}
+
+	return false
+}
+
+func (s *State) canPlayerMove(player *Player) bool {
+	if player == s.attaker {
+		return !player.confirmed && len(s.table.cards) < MAX_CARDS_AMOUNT
 	}
 
 	if player == s.defender {

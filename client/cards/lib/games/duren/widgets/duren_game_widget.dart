@@ -10,6 +10,7 @@ import 'package:cards/widgets/playing_hand_other_widget.dart';
 import 'package:cards/widgets/playing_hand_my_widget.dart';
 import 'package:cards/games/duren/widgets/duren_table_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class DurenGameWidget extends StatefulWidget {
@@ -25,6 +26,16 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
   );
 
   @override
+  void initState() {
+    super.initState();
+    _channel.stream.listen((data) {
+      var durenStateNotifier =
+          Provider.of<DurenStateNotifier>(context, listen: false);
+      durenStateNotifier.updateFromWebSocket(data);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     renderMyHandWidget(DurenState durenState) =>
         durenState.state == GameState.playing &&
@@ -36,29 +47,31 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
               )
             : null;
 
-    renderDurenTableWidget(DurenState durenState) =>
-        durenState.state == GameState.playing && durenState.table != null
+    renderDurenTableWidget(DurenStateNotifier durenStateNotifier) =>
+        durenStateNotifier.durenState!.state == GameState.playing &&
+                durenStateNotifier.durenState!.table != null
             ? DragTarget<PlayingCard>(
                 builder: (context, candidateData, rejectedData) =>
                     DurenTableWidget(
-                  table: durenState.table!,
+                  table: durenStateNotifier.durenState!.table!,
                   onDragWillAccept: _onDragWillAccept,
                   onDragLeave: _onDragLeave,
-                  onDragAccept: _onDragAccept(durenState),
+                  onDragAccept: _onDragAccept(durenStateNotifier),
                 ),
                 onWillAcceptWithDetails: _onDragWillAccept,
                 onLeave: _onDragLeave,
                 onAcceptWithDetails: (DragTargetDetails<PlayingCard> details) =>
-                    _onDragAccept(durenState)(details.data, null),
+                    _onDragAccept(durenStateNotifier)(details.data, null),
               )
             : const Column(
                 children: [Text('Waiting for starting a game....')],
               );
 
-    return StreamBuilder(
-      stream: _channel.stream,
-      builder: (context, snapshot) {
-        if (snapshot.hasData == false) {
+    return Consumer<DurenStateNotifier>(
+      builder: (context, durenStateNotifier, child) {
+        var durenState = durenStateNotifier.durenState;
+
+        if (durenState == null) {
           return const Center(
             child: SizedBox(
               width: 50,
@@ -67,9 +80,6 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
             ),
           );
         }
-
-        final serverMessage = jsonDecode(snapshot.data);
-        final durenState = DurenState.fromJson(serverMessage['state']);
 
         Player? topPlayer;
         Player? rightPlayer;
@@ -121,7 +131,7 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
                           ))
                       : Container(),
                   Expanded(
-                    child: renderDurenTableWidget(durenState),
+                    child: renderDurenTableWidget(durenStateNotifier),
                   ),
                   PlayingHandOtherWidgetContainer(
                     rotated: true,
@@ -182,16 +192,17 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
     _channel.sink.add(messageJson);
   }
 
-  Function _onDragAccept(DurenState durenState) {
+  Function _onDragAccept(DurenStateNotifier durenStateNotifier) {
     return (PlayingCard card, int? index) {
-      //@TODO for smooth experience - accept state on client first
-      // durenState.my.hand!.remove(card);
-      // durenState.table!.add(card, index);
-      // setState(() => durenState = durenState);
+      if (durenStateNotifier.durenState!.my.canMove == false) {
+        return;
+      }
+      //move the card in the local state for smooth experience
+      durenStateNotifier.move(card, index);
 
       var action = DurenActionMove(
         cardId: card.id,
-        playerId: durenState.my.id,
+        playerId: durenStateNotifier.durenState!.my.id,
         tableIndex: index,
       );
 
