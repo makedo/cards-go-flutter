@@ -6,8 +6,11 @@ class PlayingHandOtherWidget extends StatelessWidget {
   final int cardsAmount;
   final bool rotated;
 
-  const PlayingHandOtherWidget(
-      {super.key, required this.cardsAmount, this.rotated = false});
+  const PlayingHandOtherWidget({
+    super.key,
+    required this.cardsAmount,
+    this.rotated = false,
+  });
 
   @override
   Widget build(BuildContext context) {
