@@ -7,6 +7,10 @@ type Hand struct {
 }
 
 func (h *Hand) len() int {
+	if h == nil {
+		return 0
+	}
+
 	return len(h.Cards)
 }
 

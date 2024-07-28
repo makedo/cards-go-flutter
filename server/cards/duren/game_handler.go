@@ -3,6 +3,7 @@ package duren
 import (
 	"log"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"
@@ -24,11 +25,16 @@ func NewGameHandler(players int) *GameHandler {
 
 func (h *GameHandler) HandleConnection(conn *websocket.Conn) {
 	var playerId = uuid.New().String()
-	h.clients[playerId] = conn
-
-	state := h.stateHandler.join(JoinAction{
+	var state, err = h.stateHandler.join(JoinAction{
 		PlayerId: playerId,
 	})
+	if err != nil {
+		log.Println(err)
+		//@TODO send error message to client
+		return
+	}
+
+	h.clients[playerId] = conn
 	h.broadcast <- &state
 
 	for {
@@ -41,6 +47,19 @@ func (h *GameHandler) HandleConnection(conn *websocket.Conn) {
 
 		// Check the "type" field
 		switch data["type"] {
+		case "playing":
+			var action ReadyAction
+			if err := decode(data, &action); err != nil {
+				log.Println(err)
+				break
+			}
+
+			state, err := h.stateHandler.ready(action)
+			if err != nil {
+				log.Println(err)
+				break
+			}
+			h.broadcast <- &state
 		case "move":
 			var action MoveAction
 			if err := decode(data, &action); err != nil {
@@ -91,7 +110,8 @@ func (h *GameHandler) HandleConnection(conn *websocket.Conn) {
 func (h *GameHandler) BroadcastState() {
 	for {
 		state := <-h.broadcast
-		log.Println(state)
+		log.Println("Broadcasting state")
+		spew.Dump(state)
 
 		// msg, jsonErr := json.Marshal(message)
 		// if jsonErr != nil {
@@ -113,6 +133,7 @@ func (h *GameHandler) BroadcastState() {
 func response(state *State, playerId string) *StateResponseMessage {
 	var me *MeResponse
 	var topPlayer *PlayerResponse
+	var tableResponse *TableResponse = nil
 
 	for _, player := range state.players {
 		if player.Id == playerId {
@@ -122,6 +143,7 @@ func response(state *State, playerId string) *StateResponseMessage {
 				Role:       player.Role,
 				CanTake:    player.CanTake,
 				CanConfirm: player.CanConfirm,
+				State:      player.State,
 			}
 		} else {
 			topPlayer = &PlayerResponse{
@@ -131,16 +153,22 @@ func response(state *State, playerId string) *StateResponseMessage {
 		}
 	}
 
-	responseState := &StateResponse{
-		Table: &TableResponse{
+	if state.table != nil {
+		tableResponse = &TableResponse{
 			Deck:  state.table.deck.Len(),
 			Trump: state.table.trump,
 			Cards: state.table.cards,
-		},
-		My: me,
+		}
+
+	}
+
+	responseState := &StateResponse{
+		Table: tableResponse,
+		My:    me,
 		Players: &PlayersResponse{
 			Top: topPlayer,
 		},
+		State: &state.state,
 	}
 
 	return newStateResponseMessage(responseState)

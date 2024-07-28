@@ -52,3 +52,19 @@ class DurenActionConfirm {
 
   Map<String, dynamic> toJson() => _$DurenActionConfirmToJson(this);
 }
+
+@JsonSerializable()
+class DurenActionReady {
+  @JsonKey(includeFromJson: false, includeToJson: true)
+  final String type = 'playing';
+  final String playerId;
+
+  DurenActionReady({
+    required this.playerId,
+  });
+
+  factory DurenActionReady.fromJson(Map<String, dynamic> json) =>
+      _$DurenActionReadyFromJson(json);
+
+  Map<String, dynamic> toJson() => _$DurenActionReadyToJson(this);
+}

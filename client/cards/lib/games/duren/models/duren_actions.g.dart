@@ -42,3 +42,14 @@ Map<String, dynamic> _$DurenActionConfirmToJson(DurenActionConfirm instance) =>
       'type': instance.type,
       'playerId': instance.playerId,
     };
+
+DurenActionReady _$DurenActionReadyFromJson(Map<String, dynamic> json) =>
+    DurenActionReady(
+      playerId: json['playerId'] as String,
+    );
+
+Map<String, dynamic> _$DurenActionReadyToJson(DurenActionReady instance) =>
+    <String, dynamic>{
+      'type': instance.type,
+      'playerId': instance.playerId,
+    };

@@ -1,7 +1,6 @@
 package duren
 
 import (
-	"cards/cards"
 	"errors"
 	"fmt"
 )
@@ -13,51 +12,55 @@ type StateHandler struct {
 
 func NewStateHandler(players int) *StateHandler {
 	h := &StateHandler{players: players}
-
-	var deck = cards.NewDeck36()
-
 	h.state = State{
-		table: Table{
-			deck:  deck,
-			trump: deck.Last(),
-			cards: [][]*cards.PlayingCard{},
-		},
+		table:   nil,
+		state:   GameStateWaiting,
 		players: []*Player{},
 	}
 
 	return h
 }
 
-func (h *StateHandler) join(action JoinAction) State {
-	var defineRole = func() Role {
-		switch len(h.state.players) {
-		case 0:
-			return RoleAttacker
-		case 1:
-			return RoleDefender
-		default:
-			return RoleIdle
-		}
+func (h *StateHandler) join(action JoinAction) (State, error) {
+	if !h.state.isStateWaiting() {
+		return h.state, errors.New("game is already started")
 	}
 
-	var player = &Player{
-		Id:         action.PlayerId,
-		Hand:       &Hand{Cards: h.state.table.deck.Slice(0, 6)},
-		Role:       defineRole(),
-		Ready:      true,
-		CanTake:    false,
-		CanConfirm: false,
+	if len(h.state.players) >= h.players {
+		return h.state, errors.New("game is full")
 	}
 
-	h.state.players = append(h.state.players, player)
+	h.state.addPlayer(action.PlayerId)
 
-	return h.state
+	return h.state, nil
+}
+
+func (h *StateHandler) ready(action ReadyAction) (State, error) {
+	if !h.state.isStateWaiting() {
+		return h.state, errors.New("game is already started")
+	}
+
+	player := h.state.findWaitingOrFinishedPlayerById(action.PlayerId)
+	if player == nil {
+		return h.state, fmt.Errorf("player with waiting state not found")
+	}
+
+	player.State = PlayerStatePlaying
+	if h.state.areAllPlayersPlaying(h.players) {
+		h.state.startGame()
+	}
+
+	return h.state, nil
 }
 
 func (h *StateHandler) move(action MoveAction) (State, error) {
-	player := h.state.findPlayerById(action.PlayerId)
+	if !h.state.isStatePlaying() {
+		return h.state, errors.New("game is not started")
+	}
+
+	player := h.state.findPlayingPlayerById(action.PlayerId)
 	if player == nil {
-		return h.state, fmt.Errorf("player not found")
+		return h.state, fmt.Errorf("player with playing state not found")
 	}
 
 	card := player.Hand.findCardById(action.CardId)
@@ -65,9 +68,9 @@ func (h *StateHandler) move(action MoveAction) (State, error) {
 		return h.state, fmt.Errorf("card not found in hand")
 	}
 
-	var table = &h.state.table
+	var table = h.state.table
 
-	if player.Role == RoleAttacker {
+	if player.Role == PlayerRoleAttacker {
 		if !table.isEmpty() {
 			if !table.hasCardOfSameRank(card) {
 				return h.state, errors.New("card of same rank not found on table")
@@ -90,12 +93,14 @@ func (h *StateHandler) move(action MoveAction) (State, error) {
 
 		table.addCard(card)
 		player.Hand.removeCard(card)
+
 		h.state.calculatePlayersTakeAndConfirm()
+		h.state.endGame()
 
 		return h.state, nil
 	}
 
-	if player.Role == RoleDefender {
+	if player.Role == PlayerRoleDefender {
 
 		if table.isEmpty() {
 			return h.state, errors.New("defender can not move card - table is empty")
@@ -130,7 +135,9 @@ func (h *StateHandler) move(action MoveAction) (State, error) {
 
 		table.coverCard(card, index)
 		player.Hand.removeCard(card)
+
 		h.state.calculatePlayersTakeAndConfirm()
+		h.state.endGame()
 
 		return h.state, nil
 	}
@@ -139,9 +146,13 @@ func (h *StateHandler) move(action MoveAction) (State, error) {
 }
 
 func (h *StateHandler) take(action TakeAction) (State, error) {
-	player := h.state.findPlayerById(action.PlayerId)
+	if !h.state.isStatePlaying() {
+		return h.state, errors.New("game is not started")
+	}
+
+	player := h.state.findPlayingPlayerById(action.PlayerId)
 	if player == nil {
-		return h.state, fmt.Errorf("player not found")
+		return h.state, fmt.Errorf("player with playing state not found")
 	}
 
 	var canTake, err = h.state.canPlayerTake(player)
@@ -149,22 +160,24 @@ func (h *StateHandler) take(action TakeAction) (State, error) {
 		return h.state, err
 	}
 
-	//get all cards from table and add them to player's hand
-	for _, row := range h.state.table.cards {
-		player.Hand.Cards = append(player.Hand.Cards, row...)
-	}
+	h.state.moveCardsFromTableToPlayer(player)
 
 	h.state.clearTable()
 	h.state.giveCardsFromDeckToPlayers()
 	h.state.calculatePlayersTakeAndConfirm()
+	h.state.endGame()
 
 	return h.state, nil
 }
 
 func (h *StateHandler) confirm(action ConfirmAction) (State, error) {
-	player := h.state.findPlayerById(action.PlayerId)
+	if !h.state.isStatePlaying() {
+		return h.state, errors.New("game is not started")
+	}
+
+	player := h.state.findPlayingPlayerById(action.PlayerId)
 	if player == nil {
-		return h.state, fmt.Errorf("player not found")
+		return h.state, fmt.Errorf("player with playing state not found")
 	}
 
 	var canConfirm, err = h.state.canPlayerConfirm(player)
@@ -176,30 +189,7 @@ func (h *StateHandler) confirm(action ConfirmAction) (State, error) {
 	h.state.giveCardsFromDeckToPlayers()
 	h.state.recalculatePlayersRoles()
 	h.state.calculatePlayersTakeAndConfirm()
+	h.state.endGame()
 
 	return h.state, nil
-}
-
-func (h *StateHandler) ready(playerId string) State {
-	player := h.state.findPlayerById(playerId)
-	player.Ready = true
-
-	if h.state.areAllPlayersReady() {
-		h.start()
-	}
-
-	return h.state
-}
-
-func (h *StateHandler) start() State {
-	for i, player := range h.state.players {
-		player.Hand = &Hand{Cards: h.state.table.deck.Slice(0, 6)}
-		if i == 0 {
-			player.Role = RoleAttacker
-		} else {
-			player.Role = RoleDefender
-		}
-	}
-
-	return h.state
 }

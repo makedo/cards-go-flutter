@@ -20,11 +20,12 @@ type StateResponse struct {
 	Table   *TableResponse   `json:"table"`
 	My      *MeResponse      `json:"my"`
 	Players *PlayersResponse `json:"players"`
+	State   *GameState       `json:"state"`
 }
 
 type PlayerResponse struct {
-	Hand int  `json:"hand"`
-	Role Role `json:"role"`
+	Hand int        `json:"hand"`
+	Role PlayerRole `json:"role"`
 }
 
 type PlayersResponse struct {
@@ -40,9 +41,10 @@ type TableResponse struct {
 }
 
 type MeResponse struct {
-	Id         string `json:"id"`
-	Hand       *Hand  `json:"hand"`
-	Role       Role   `json:"role"`
-	CanTake    bool   `json:"canTake"`
-	CanConfirm bool   `json:"canConfirm"`
+	Id         string      `json:"id"`
+	Hand       *Hand       `json:"hand"`
+	Role       PlayerRole  `json:"role"`
+	CanTake    bool        `json:"canTake"`
+	CanConfirm bool        `json:"canConfirm"`
+	State      PlayerState `json:"state"`
 }

@@ -1,12 +1,21 @@
 package duren
 
 import (
+	"cards/cards"
 	"errors"
 )
 
+type GameState string
+
+const (
+	GameStateWaiting GameState = "waiting"
+	GameStatePlaying GameState = "playing"
+)
+
 type State struct {
-	table   Table
+	table   *Table
 	players []*Player
+	state   GameState
 }
 
 func (s *State) findPlayerById(id string) *Player {
@@ -18,19 +27,50 @@ func (s *State) findPlayerById(id string) *Player {
 	return nil
 }
 
-func (s *State) areAllPlayersReady() bool {
+func (s *State) findPlayingPlayerById(id string) *Player {
+	player := s.findPlayerById(id)
+	if player != nil && player.State == PlayerStatePlaying {
+		return player
+	}
+
+	return nil
+}
+
+func (s *State) findWaitingOrFinishedPlayerById(id string) *Player {
+	player := s.findPlayerById(id)
+	if player != nil &&
+		(player.State == PlayerStateWaiting ||
+			player.State == PlayerStateFinished) {
+		return player
+	}
+
+	return nil
+}
+
+func (s *State) areAllPlayersPlaying(playersAmount int) bool {
 	for _, player := range s.players {
-		if !player.Ready {
+		if player.State != PlayerStatePlaying {
 			return false
 		}
 	}
 
-	return true
+	return playersAmount == len(s.players)
+}
+
+func (s *State) addPlayer(id string) {
+	s.players = append(s.players, &Player{
+		Id:         id,
+		Hand:       nil,
+		Role:       PlayerRoleIdle,
+		CanTake:    false,
+		CanConfirm: false,
+		State:      PlayerStateWaiting,
+	})
 }
 
 func (s *State) findDefender() *Player {
 	for _, p := range s.players {
-		if p.Role == RoleDefender {
+		if p.Role == PlayerRoleDefender {
 			return p
 		}
 	}
@@ -39,7 +79,7 @@ func (s *State) findDefender() *Player {
 }
 
 func (s *State) canPlayerTake(player *Player) (bool, error) {
-	if player.Role != RoleDefender {
+	if player.Role != PlayerRoleDefender {
 		return false, errors.New("only defender can take")
 	}
 
@@ -55,7 +95,7 @@ func (s *State) canPlayerTake(player *Player) (bool, error) {
 }
 
 func (s *State) canPlayerConfirm(player *Player) (bool, error) {
-	if player.Role != RoleAttacker {
+	if player.Role != PlayerRoleAttacker {
 		return false, errors.New("only attacker can confirm")
 	}
 
@@ -81,10 +121,10 @@ func (s *State) giveCardsFromDeckToPlayers() {
 func (s *State) recalculatePlayersRoles() {
 	for _, player := range s.players {
 		//@todo: for more than 2 players
-		if player.Role == RoleAttacker {
-			player.Role = RoleDefender
-		} else if player.Role == RoleDefender {
-			player.Role = RoleAttacker
+		if player.Role == PlayerRoleAttacker {
+			player.Role = PlayerRoleDefender
+		} else if player.Role == PlayerRoleDefender {
+			player.Role = PlayerRoleAttacker
 		}
 	}
 }
@@ -100,19 +140,72 @@ func (s *State) clearTable() {
 	s.table.clear()
 }
 
-type Player struct {
-	Id         string `json:"id"`
-	Hand       *Hand  `json:"hand"`
-	Role       Role   `json:"role"`
-	Ready      bool   `json:"ready"`
-	CanTake    bool   `json:"canTake"`
-	CanConfirm bool   `json:"canConfirm"`
+func (s *State) endGame() bool {
+	if s.table.deck.Len() > 0 {
+		return false
+	}
+
+	if len(s.table.cards) > 0 {
+		return false
+	}
+
+	var finishedPlayers = 0
+	for _, player := range s.players {
+		if player.Hand.len() == 0 {
+			player.State = PlayerStateFinished
+		}
+
+		if player.State == PlayerStateFinished {
+			finishedPlayers++
+		}
+	}
+
+	if finishedPlayers < len(s.players)-1 {
+		return false
+	}
+
+	var defender = s.findDefender()
+	if defender == nil {
+		return false
+	}
+	defender.State = PlayerStateFinished
+
+	s.state = GameStateWaiting
+	return true
 }
 
-type Role string
+func (s *State) startGame() {
+	var deck = cards.NewDeck36()
+	s.table = &Table{
+		deck:  deck,
+		trump: deck.Last(),
+		cards: [][]*cards.PlayingCard{},
+	}
 
-const (
-	RoleAttacker Role = "attacker"
-	RoleDefender Role = "defender"
-	RoleIdle     Role = "idle"
-)
+	for i, player := range s.players {
+		player.Hand = &Hand{Cards: s.table.deck.Slice(0, 6)}
+		//@TODO for more than 2 players
+		if i == 0 {
+			player.Role = PlayerRoleAttacker
+		} else {
+			player.Role = PlayerRoleDefender
+		}
+	}
+
+	s.state = GameStatePlaying
+}
+
+func (s *State) isStateWaiting() bool {
+	return s.state == GameStateWaiting
+}
+
+func (s *State) isStatePlaying() bool {
+	return s.state == GameStatePlaying
+}
+
+func (s *State) moveCardsFromTableToPlayer(player *Player) {
+	//get all cards from table and add them to player's hand
+	for _, row := range s.table.cards {
+		player.Hand.Cards = append(player.Hand.Cards, row...)
+	}
+}

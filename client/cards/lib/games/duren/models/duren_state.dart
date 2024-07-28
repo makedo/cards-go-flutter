@@ -3,16 +3,23 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'duren_state.g.dart';
 
+enum GameState {
+  waiting,
+  playing,
+}
+
 @JsonSerializable(explicitToJson: true)
 class DurenState {
-  final DurenTable table;
+  final DurenTable? table;
   final Me my;
   final Players players;
+  final GameState state;
 
   DurenState({
     required this.table,
     required this.my,
     required this.players,
+    required this.state,
   });
 
   factory DurenState.fromJson(Map<String, dynamic> json) =>
@@ -111,13 +118,21 @@ class Hand {
   Map<String, dynamic> toJson() => _$HandToJson(this);
 }
 
+enum PlayerState {
+  waiting,
+  playing,
+  finished,
+  left,
+}
+
 @JsonSerializable(explicitToJson: true)
 class Me {
   final String id;
-  final Hand hand;
+  final Hand? hand;
   final Role role;
   final bool canConfirm;
   final bool canTake;
+  final PlayerState state;
 
   Me({
     required this.id,
@@ -125,6 +140,7 @@ class Me {
     required this.role,
     required this.canConfirm,
     required this.canTake,
+    required this.state,
   });
 
   factory Me.fromJson(Map<String, dynamic> json) => _$MeFromJson(json);

@@ -5,12 +5,15 @@ class DurenButtonsRowWidget extends StatelessWidget {
   final Me my;
   final VoidCallback onTake;
   final VoidCallback onConfirm;
+  final VoidCallback onReady;
 
-  const DurenButtonsRowWidget(
-      {super.key,
-      required this.my,
-      required this.onTake,
-      required this.onConfirm});
+  const DurenButtonsRowWidget({
+    super.key,
+    required this.my,
+    required this.onTake,
+    required this.onConfirm,
+    required this.onReady,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +30,20 @@ class DurenButtonsRowWidget extends StatelessWidget {
       buttons.add(ElevatedButton(
         onPressed: onTake,
         child: const Text('Take'),
+      ));
+    }
+
+    if (my.state == PlayerState.waiting) {
+      buttons.add(ElevatedButton(
+        onPressed: onReady,
+        child: const Text('Ready'),
+      ));
+    }
+
+    if (my.state == PlayerState.finished) {
+      buttons.add(ElevatedButton(
+        onPressed: onReady,
+        child: const Text('Continue'),
       ));
     }
 

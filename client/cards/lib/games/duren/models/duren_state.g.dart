@@ -7,17 +7,26 @@ part of 'duren_state.dart';
 // **************************************************************************
 
 DurenState _$DurenStateFromJson(Map<String, dynamic> json) => DurenState(
-      table: DurenTable.fromJson(json['table'] as Map<String, dynamic>),
+      table: json['table'] == null
+          ? null
+          : DurenTable.fromJson(json['table'] as Map<String, dynamic>),
       my: Me.fromJson(json['my'] as Map<String, dynamic>),
       players: Players.fromJson(json['players'] as Map<String, dynamic>),
+      state: $enumDecode(_$GameStateEnumMap, json['state']),
     );
 
 Map<String, dynamic> _$DurenStateToJson(DurenState instance) =>
     <String, dynamic>{
-      'table': instance.table.toJson(),
+      'table': instance.table?.toJson(),
       'my': instance.my.toJson(),
       'players': instance.players.toJson(),
+      'state': _$GameStateEnumMap[instance.state]!,
     };
+
+const _$GameStateEnumMap = {
+  GameState.waiting: 'waiting',
+  GameState.playing: 'playing',
+};
 
 DurenTable _$DurenTableFromJson(Map<String, dynamic> json) => DurenTable(
       deck: json['deck'] as int,
@@ -92,16 +101,27 @@ Map<String, dynamic> _$HandToJson(Hand instance) => <String, dynamic>{
 
 Me _$MeFromJson(Map<String, dynamic> json) => Me(
       id: json['id'] as String,
-      hand: Hand.fromJson(json['hand'] as Map<String, dynamic>),
+      hand: json['hand'] == null
+          ? null
+          : Hand.fromJson(json['hand'] as Map<String, dynamic>),
       role: $enumDecode(_$RoleEnumMap, json['role']),
       canConfirm: json['canConfirm'] as bool,
       canTake: json['canTake'] as bool,
+      state: $enumDecode(_$PlayerStateEnumMap, json['state']),
     );
 
 Map<String, dynamic> _$MeToJson(Me instance) => <String, dynamic>{
       'id': instance.id,
-      'hand': instance.hand.toJson(),
+      'hand': instance.hand?.toJson(),
       'role': _$RoleEnumMap[instance.role]!,
       'canConfirm': instance.canConfirm,
       'canTake': instance.canTake,
+      'state': _$PlayerStateEnumMap[instance.state]!,
     };
+
+const _$PlayerStateEnumMap = {
+  PlayerState.waiting: 'waiting',
+  PlayerState.playing: 'playing',
+  PlayerState.finished: 'finished',
+  PlayerState.left: 'left',
+};

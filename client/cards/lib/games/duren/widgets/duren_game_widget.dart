@@ -26,6 +26,35 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
 
   @override
   Widget build(BuildContext context) {
+    renderMyHandWidget(DurenState durenState) =>
+        durenState.state == GameState.playing &&
+                durenState.table?.trump != null &&
+                durenState.my.hand != null
+            ? PlayingHandMyWidget(
+                trumpSuit: durenState.table!.trump.suit,
+                cards: durenState.my.hand!.cards,
+              )
+            : null;
+
+    renderDurenTableWidget(DurenState durenState) =>
+        durenState.state == GameState.playing && durenState.table != null
+            ? DragTarget<PlayingCard>(
+                builder: (context, candidateData, rejectedData) =>
+                    DurenTableWidget(
+                  table: durenState.table!,
+                  onDragWillAccept: _onDragWillAccept,
+                  onDragLeave: _onDragLeave,
+                  onDragAccept: _onDragAccept(durenState),
+                ),
+                onWillAcceptWithDetails: _onDragWillAccept,
+                onLeave: _onDragLeave,
+                onAcceptWithDetails: (DragTargetDetails<PlayingCard> details) =>
+                    _onDragAccept(durenState)(details.data, null),
+              )
+            : const Column(
+                children: [Text('Waiting for starting a game....')],
+              );
+
     return StreamBuilder(
       stream: _channel.stream,
       builder: (context, snapshot) {
@@ -60,19 +89,7 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
                     ),
                   ),
                   Expanded(
-                    child: DragTarget<PlayingCard>(
-                        builder: (context, candidateData, rejectedData) =>
-                            DurenTableWidget(
-                              table: durenState.table,
-                              onDragWillAccept: _onDragWillAccept,
-                              onDragLeave: _onDragLeave,
-                              onDragAccept: _onDragAccept(durenState),
-                            ),
-                        onWillAcceptWithDetails: _onDragWillAccept,
-                        onLeave: _onDragLeave,
-                        onAcceptWithDetails:
-                            (DragTargetDetails<PlayingCard> details) =>
-                                _onDragAccept(durenState)(details.data, null)),
+                    child: renderDurenTableWidget(durenState),
                   ),
                   PlayingHandOtherWidgetContainer(
                     rotated: true,
@@ -87,13 +104,12 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
               my: durenState.my,
               onTake: () => _onTake(durenState),
               onConfirm: () => _onConfirm(durenState),
+              onReady: () => _onReady(durenState),
             ),
             Container(
-                color: Colors.grey,
-                child: PlayingHandMyWidget(
-                  trumpSuit: durenState.table.trump.suit,
-                  cards: durenState.my.hand.cards,
-                )),
+              color: Colors.grey,
+              child: renderMyHandWidget(durenState),
+            ),
           ],
         );
       },
@@ -111,6 +127,15 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
 
   void _onConfirm(DurenState durenState) {
     var action = DurenActionConfirm(
+      playerId: durenState.my.id,
+    );
+
+    var messageJson = jsonEncode(action);
+    _channel.sink.add(messageJson);
+  }
+
+  void _onReady(DurenState durenState) {
+    var action = DurenActionReady(
       playerId: durenState.my.id,
     );
 

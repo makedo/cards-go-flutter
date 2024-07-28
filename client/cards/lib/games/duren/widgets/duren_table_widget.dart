@@ -52,7 +52,8 @@ class DurenTableWidget extends StatelessWidget {
         ),
         onAcceptWithDetails: (DragTargetDetails<PlayingCard> details) =>
             onDragAccept(details.data, index),
-        onLeave: (PlayingCard? card) => onDragLeave(card),
+        onLeave: (PlayingCard? card) =>
+            onDragLeave(card),
         onWillAcceptWithDetails: (DragTargetDetails<PlayingCard> details) =>
             onDragWillAccept(details),
       );
