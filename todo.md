@@ -10,7 +10,7 @@
 
 - Before first round ending and not taking - 5 cards max on table
 
-- Lock state when performing action (mutex)
+- Lock state when performing action (mutex) +
 
 - Ability to reconnect
 - Timer
