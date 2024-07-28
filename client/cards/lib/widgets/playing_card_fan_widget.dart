@@ -12,8 +12,7 @@ class PlayingCardFanWidget extends StatelessWidget {
   final bool rotated;
 
   const PlayingCardFanWidget(
-      {Key? key, required this.children, this.rotated = false})
-      : super(key: key);
+      {super.key, required this.children, this.rotated = false});
 
   @override
   Widget build(Object context) {

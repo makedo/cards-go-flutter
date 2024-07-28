@@ -1,7 +1,10 @@
+import 'package:cards/config/config.dart';
+import 'package:cards/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:cards/games/duren/widgets/duren_game.dart';
 
-void main() {
+void main() async {
+  await Config.load();
   runApp(const MyApp());
 }
 
@@ -11,9 +14,13 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Duren',
-      home: DurenGame(),
+    return MaterialApp(
+      title: 'Cards',
+      initialRoute: '/',
+      routes: {
+        '/': (BuildContext context) => const HomePage(),
+        '/games/duren': (BuildContext context) => const DurenGame(),
+      },
     );
   }
 }

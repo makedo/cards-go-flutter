@@ -1,12 +1,14 @@
+import 'dart:convert';
+
+import 'package:cards/config/config.dart';
 import 'package:cards/games/duren/models/duren_state.dart';
 import 'package:cards/models/playing_card.dart';
-import 'package:cards/models/playing_card/rank.dart';
-import 'package:cards/models/playing_card/suit.dart';
 import 'package:cards/widgets/playing_card_widget.dart';
 import 'package:cards/widgets/playing_hand_other_widget.dart';
 import 'package:cards/widgets/playing_hand_my_widget.dart';
 import 'package:cards/games/duren/widgets/duren_table_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 class DurenGame extends StatefulWidget {
   const DurenGame({super.key});
@@ -16,132 +18,84 @@ class DurenGame extends StatefulWidget {
 }
 
 class _DurenGameState extends State<DurenGame> {
-  DurenState durenState = DurenState(
-    my: Me(
-      hand: Hand(cards: [
-        PlayingCard(suit: Suit.spades, rank: Rank.ace),
-        PlayingCard(suit: Suit.hearts, rank: Rank.two),
-        PlayingCard(suit: Suit.diamonds, rank: Rank.three),
-        PlayingCard(suit: Suit.clubs, rank: Rank.four),
-        PlayingCard(suit: Suit.spades, rank: Rank.five),
-        PlayingCard(suit: Suit.hearts, rank: Rank.six),
-        PlayingCard(suit: Suit.hearts, rank: Rank.six),
-        PlayingCard(suit: Suit.hearts, rank: Rank.six),
-        PlayingCard(suit: Suit.hearts, rank: Rank.six),
-        PlayingCard(suit: Suit.hearts, rank: Rank.six),
-        PlayingCard(suit: Suit.hearts, rank: Rank.six),
-        PlayingCard(suit: Suit.hearts, rank: Rank.six),
-        PlayingCard(suit: Suit.hearts, rank: Rank.six),
-        PlayingCard(suit: Suit.hearts, rank: Rank.ten),
-        PlayingCard(suit: Suit.hearts, rank: Rank.ten),
-        PlayingCard(suit: Suit.hearts, rank: Rank.ten),
-        PlayingCard(suit: Suit.hearts, rank: Rank.ten),
-        PlayingCard(suit: Suit.hearts, rank: Rank.king),
-      ]),
-      role: Role.attacker,
-    ),
-    players: Players(
-      left: Player(
-        cards: 6,
-        role: Role.defender,
-      ),
-      top: null,
-      right: Player(
-        cards: 0,
-        role: Role.idle,
-      ),
-    ),
-    table: DurenTable(
-      deck: 2,
-      trump: PlayingCard(
-        suit: Suit.hearts,
-        rank: Rank.ace,
-      ),
-      cards: [
-        // [
-        //   PlayingCard(suit: Suit.spades, rank: Rank.six),
-        //   PlayingCard(suit: Suit.spades, rank: Rank.ace),
-        // ],
-        // [
-        //   PlayingCard(suit: Suit.diamonds, rank: Rank.seven),
-        //   PlayingCard(suit: Suit.diamonds, rank: Rank.king),
-        // ],
-        // [
-        //   PlayingCard(suit: Suit.clubs, rank: Rank.eight),
-        //   PlayingCard(suit: Suit.clubs, rank: Rank.queen),
-        // ],
-        [
-          PlayingCard(suit: Suit.hearts, rank: Rank.nine),
-          // PlayingCard(suit: Suit.hearts, rank: Rank.jack),
-        ],
-        [
-          PlayingCard(suit: Suit.spades, rank: Rank.ten),
-          // PlayingCard(suit: Suit.hearts, rank: Rank.ten),
-        ],
-        [
-          PlayingCard(suit: Suit.spades, rank: Rank.jack),
-        ],
-      ],
-    ),
+  final _channel = WebSocketChannel.connect(
+    Uri.parse(Config.wsUrl),
   );
-
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        PlayingHandOtherWidgetContainer(
-          rotated: false,
-          child: PlayingHandOtherTopWidget(
-            cardsAmount: durenState.players.topPlayerCards,
-          ),
-        ),
-        Expanded(
-          child: Row(
-            children: [
-              PlayingHandOtherWidgetContainer(
-                rotated: true,
-                child: PlayingHandOtherLeftWidget(
-                  cardsAmount: durenState.players.leftPlayerCards,
-                ),
+    return StreamBuilder(
+      stream: _channel.stream,
+      builder: (context, snapshot) {
+        if (snapshot.hasData == false) {
+          return const Center(
+            child: SizedBox(
+              width: 50,
+              height: 50,
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        final serverMessage = jsonDecode(snapshot.data);
+        final durenState = DurenState.fromJson(serverMessage['state']);
+
+        return Column(
+          children: [
+            PlayingHandOtherWidgetContainer(
+              rotated: false,
+              child: PlayingHandOtherTopWidget(
+                cardsAmount: durenState.players.topPlayerCards,
               ),
-              Expanded(
-                child: DragTarget<PlayingCard>(
-                  builder: (context, candidateData, rejectedData) =>
-                      DurenTableWidget(
-                    table: durenState.table,
-                    onDragWillAccept: _onDragWillAccept,
-                    onDragLeave: _onDragLeave,
-                    onDragAccept: _onDragAccept,
+            ),
+            Expanded(
+              child: Row(
+                children: [
+                  PlayingHandOtherWidgetContainer(
+                    rotated: true,
+                    child: PlayingHandOtherLeftWidget(
+                      cardsAmount: durenState.players.leftPlayerCards,
+                    ),
                   ),
-                  onWillAccept: _onDragWillAccept,
-                  onLeave: _onDragLeave,
-                  onAccept: (PlayingCard card) => _onDragAccept(card, null),
-                ),
+                  Expanded(
+                    child: DragTarget<PlayingCard>(
+                      builder: (context, candidateData, rejectedData) =>
+                          DurenTableWidget(
+                        table: durenState.table,
+                        onDragWillAccept: _onDragWillAccept,
+                        onDragLeave: _onDragLeave,
+                        onDragAccept: _onDragAccept,
+                      ),
+                      onWillAccept: _onDragWillAccept,
+                      onLeave: _onDragLeave,
+                      onAccept: (PlayingCard card) => _onDragAccept(card, null),
+                    ),
+                  ),
+                  PlayingHandOtherWidgetContainer(
+                    rotated: true,
+                    child: PlayingHandOtherRightWidget(
+                      cardsAmount: durenState.players.rightPlayerCards,
+                    ),
+                  ),
+                ],
               ),
-              PlayingHandOtherWidgetContainer(
-                rotated: true,
-                child: PlayingHandOtherRightWidget(
-                  cardsAmount: durenState.players.rightPlayerCards,
-                ),
+            ),
+            Container(
+              color: Colors.grey,
+              height: PlayingCardWidget.height,
+              child: PlayingHandMyWidget(
+                cards: durenState.my.hand.cards,
               ),
-            ],
-          ),
-        ),
-        Container(
-          color: Colors.grey,
-          height: PlayingCardWidget.height,
-          child: PlayingHandMyWidget(
-            cards: durenState.my.hand.cards,
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 
   void _onDragAccept(PlayingCard card, int? index) {
-    durenState.my.hand.remove(card);
-    durenState.table.add(card, index);
-    setState(() => durenState = durenState);
+    // durenState.my.hand.remove(card);
+    // durenState.table.add(card, index);
+    // setState(() => durenState = durenState);
   }
 
   void _onDragLeave(PlayingCard? card) {}

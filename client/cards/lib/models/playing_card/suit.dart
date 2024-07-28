@@ -19,7 +19,7 @@ extension SuitExtension on Suit {
       case Suit.clubs:
         return '\u2663'; // ASCII for clubs
       default:
-        return 'Unknown';
+        throw Exception("Unknown suit enum: ${toString()}");
     }
   }
 }

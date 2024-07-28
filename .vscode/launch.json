@@ -5,6 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Go debug",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "server/cards",
+            "env": {},
+            "args": []
+        },
+
+        {
             "name": "cards",
             "cwd": "client/cards",
             "request": "launch",

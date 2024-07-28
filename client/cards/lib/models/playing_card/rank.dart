@@ -32,4 +32,7 @@ class Rank {
         return value.toString();
     }
   }
+
+  int toJson() => value;
+  static Rank fromJson(int json) => Rank(json);
 }
