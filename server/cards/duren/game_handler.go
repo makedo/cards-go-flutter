@@ -111,17 +111,11 @@ func (h *GameHandler) BroadcastState() {
 	for {
 		state := <-h.broadcast
 		log.Println("Broadcasting state")
-		spew.Dump(state)
-
-		// msg, jsonErr := json.Marshal(message)
-		// if jsonErr != nil {
-		// 	log.Println(jsonErr)
-		// 	return
-		// }
 
 		//broadcast message to all clients
 		for playerId, client := range h.clients {
 			message := response(state, playerId)
+			spew.Dump(message)
 			writeErr := client.WriteJSON(message)
 			if writeErr != nil {
 				log.Printf("error: %v", writeErr)
@@ -131,47 +125,65 @@ func (h *GameHandler) BroadcastState() {
 }
 
 func response(state *State, playerId string) *StateResponseMessage {
-	var me *MeResponse
-	var topPlayer *PlayerResponse
-	var tableResponse *TableResponse = nil
-
-	for _, player := range state.players {
-		if player.id == playerId {
-			me = &MeResponse{
-				Id:         player.id,
-				Hand:       player.hand,
-				Role:       player.role,
-				CanTake:    player.canTake,
-				CanConfirm: player.canConfirm,
-				State:      player.state,
-			}
-		} else {
-			topPlayer = &PlayerResponse{
-				Hand: player.hand.len(),
-				Role: player.role,
-			}
-		}
-	}
-
+	var tableResponse *TableResponse
 	if state.table != nil {
 		tableResponse = &TableResponse{
 			Deck:  state.table.deck.Len(),
 			Trump: state.table.trump,
 			Cards: state.table.cards,
 		}
-
 	}
 
-	responseState := &StateResponse{
-		Table: tableResponse,
-		My:    me,
-		Players: &PlayersResponse{
-			Top: topPlayer,
-		},
-		State: &state.state,
+	var me *Player
+	startIndex := 0
+	for i, player := range state.players {
+		if player.id == playerId {
+			startIndex = i
+			me = player
+			break
+		}
 	}
 
-	return newStateResponseMessage(responseState)
+	meResponse := &MeResponse{
+		Id:         me.id,
+		Hand:       me.hand,
+		CanConfirm: state.canPlayerConfirm(me),
+		State:      state.getPlayerState(me), // PlayerStateReady if it is in readyPlayers list
+		Role:       state.getPlayerRole(me),
+	}
+
+	var playerResponses []*PlayerResponse
+	j := 0
+	for i := startIndex + 1; i < len(state.players); i++ {
+		playerResponses = append(playerResponses, &PlayerResponse{
+			Hand:  state.players[i].hand.len(),
+			Role:  state.getPlayerRole(state.players[i]),
+			State: state.getPlayerState(state.players[i]),
+		})
+		j++
+	}
+	for i := 0; i < startIndex; i++ {
+		playerResponses = append(playerResponses, &PlayerResponse{
+			Hand:  state.players[i].hand.len(),
+			Role:  state.getPlayerRole(state.players[i]),
+			State: state.getPlayerState(state.players[i]),
+		})
+		j++
+	}
+
+	//To return [] instead of null in json
+	if playerResponses == nil {
+		playerResponses = make([]*PlayerResponse, 0)
+	}
+
+	stateResponse := &StateResponse{
+		Table:   tableResponse,
+		My:      meResponse,
+		Players: playerResponses,
+		State:   &state.state,
+	}
+
+	return newStateResponseMessage(stateResponse)
 }
 
 func decode(data map[string]interface{}, result interface{}) error {

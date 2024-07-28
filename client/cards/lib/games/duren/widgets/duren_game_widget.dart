@@ -71,37 +71,76 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
         final serverMessage = jsonDecode(snapshot.data);
         final durenState = DurenState.fromJson(serverMessage['state']);
 
+        Player? topPlayer;
+        Player? rightPlayer;
+        Player? leftPlayer;
+        switch (durenState.players.length) {
+          case 1:
+            topPlayer = durenState.players[0];
+            break;
+          case 2:
+            topPlayer = durenState.players[0];
+            rightPlayer = durenState.players[1];
+            break;
+          case 3:
+            leftPlayer = durenState.players[0];
+            topPlayer = durenState.players[1];
+            rightPlayer = durenState.players[2];
+            break;
+        }
+
         return Column(
           children: [
             PlayingHandOtherWidgetContainer(
               rotated: false,
               child: PlayingHandOtherTopWidget(
-                cardsAmount: durenState.players.topPlayerCards,
+                player: topPlayer,
               ),
             ),
+            topPlayer != null
+                ? Text(topPlayer.role.name,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 10.0,
+                    ))
+                : Container(),
             Expanded(
               child: Row(
                 children: [
                   PlayingHandOtherWidgetContainer(
                     rotated: true,
                     child: PlayingHandOtherLeftWidget(
-                      cardsAmount: durenState.players.leftPlayerCards,
+                      player: leftPlayer,
                     ),
                   ),
+                  leftPlayer != null
+                      ? Text(leftPlayer.role.name,
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 10.0,
+                          ))
+                      : Container(),
                   Expanded(
                     child: renderDurenTableWidget(durenState),
                   ),
                   PlayingHandOtherWidgetContainer(
                     rotated: true,
                     child: PlayingHandOtherRightWidget(
-                      cardsAmount: durenState.players.rightPlayerCards,
+                      player: rightPlayer,
                     ),
                   ),
+                  rightPlayer != null
+                      ? Text(rightPlayer.role.name,
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 10.0,
+                          ))
+                      : Container()
                 ],
               ),
             ),
-            DurenButtonsRowWidget(
-              my: durenState.my,
+            DurenActionsRowWidget(
+              durenState: durenState,
               onTake: () => _onTake(durenState),
               onConfirm: () => _onConfirm(durenState),
               onReady: () => _onReady(durenState),
@@ -145,6 +184,11 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
 
   Function _onDragAccept(DurenState durenState) {
     return (PlayingCard card, int? index) {
+      //@TODO for smooth experience - accept state on client first
+      // durenState.my.hand!.remove(card);
+      // durenState.table!.add(card, index);
+      // setState(() => durenState = durenState);
+
       var action = DurenActionMove(
         cardId: card.id,
         playerId: durenState.my.id,
@@ -154,10 +198,6 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
       // Convert the message to a JSON string
       var messageJson = jsonEncode(action);
       _channel.sink.add(messageJson);
-
-      // durenState.my.hand.remove(card);
-      // durenState.table.add(card, index);
-      // setState(() => durenState = durenState);
     };
   }
 
@@ -177,10 +217,10 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
 class PlayingHandOtherRightWidget extends StatelessWidget {
   const PlayingHandOtherRightWidget({
     super.key,
-    required this.cardsAmount,
+    required this.player,
   });
 
-  final int cardsAmount;
+  final Player? player;
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +229,7 @@ class PlayingHandOtherRightWidget extends StatelessWidget {
       maxWidth: PlayingCardWidget.width,
       alignment: Alignment.topLeft,
       child: PlayingHandOtherWidget(
-        cardsAmount: cardsAmount,
+        player: player,
         rotated: true,
       ),
     );
@@ -199,10 +239,10 @@ class PlayingHandOtherRightWidget extends StatelessWidget {
 class PlayingHandOtherLeftWidget extends StatelessWidget {
   const PlayingHandOtherLeftWidget({
     super.key,
-    required this.cardsAmount,
+    required this.player,
   });
 
-  final int cardsAmount;
+  final Player? player;
 
   @override
   Widget build(BuildContext context) {
@@ -211,7 +251,7 @@ class PlayingHandOtherLeftWidget extends StatelessWidget {
       maxWidth: PlayingCardWidget.width,
       alignment: Alignment.topRight,
       child: PlayingHandOtherWidget(
-        cardsAmount: cardsAmount,
+        player: player,
         rotated: true,
       ),
     );
@@ -221,10 +261,10 @@ class PlayingHandOtherLeftWidget extends StatelessWidget {
 class PlayingHandOtherTopWidget extends StatelessWidget {
   const PlayingHandOtherTopWidget({
     super.key,
-    required this.cardsAmount,
+    required this.player,
   });
 
-  final int cardsAmount;
+  final Player? player;
 
   @override
   Widget build(BuildContext context) {
@@ -233,7 +273,7 @@ class PlayingHandOtherTopWidget extends StatelessWidget {
       maxHeight: PlayingCardWidget.height,
       alignment: Alignment.bottomCenter,
       child: PlayingHandOtherWidget(
-        cardsAmount: cardsAmount,
+        player: player,
       ),
     );
   }

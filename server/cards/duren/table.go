@@ -1,6 +1,8 @@
 package duren
 
-import "cards/cards"
+import (
+	"cards/cards"
+)
 
 type Table struct {
 	deck  *cards.Deck

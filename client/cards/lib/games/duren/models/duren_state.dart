@@ -6,13 +6,14 @@ part 'duren_state.g.dart';
 enum GameState {
   waiting,
   playing,
+  finished,
 }
 
 @JsonSerializable(explicitToJson: true)
 class DurenState {
   final DurenTable? table;
   final Me my;
-  final Players players;
+  final List<Player> players;
   final GameState state;
 
   DurenState({
@@ -58,10 +59,12 @@ class DurenTable {
 class Player {
   final int hand;
   final Role role;
+  final PlayerState state;
 
   Player({
     required this.hand,
     required this.role,
+    required this.state,
   });
 
   factory Player.fromJson(Map<String, dynamic> json) => _$PlayerFromJson(json);
@@ -69,36 +72,25 @@ class Player {
   Map<String, dynamic> toJson() => _$PlayerToJson(this);
 }
 
-@JsonSerializable(explicitToJson: true, includeIfNull: false)
-class Players {
-  final Player? left;
-  final Player? top;
-  final Player? right;
-
-  Players({
-    required this.left,
-    required this.top,
-    required this.right,
-  });
-
-  int get topPlayerCards => top?.hand ?? 0;
-  int get leftPlayerCards => left?.hand ?? 0;
-  int get rightPlayerCards => right?.hand ?? 0;
-
-  Role get topPlayerRole => top?.role ?? Role.idle;
-  Role get leftPlayerRole => left?.role ?? Role.idle;
-  Role get rightPlayerRole => right?.role ?? Role.idle;
-
-  factory Players.fromJson(Map<String, dynamic> json) =>
-      _$PlayersFromJson(json);
-
-  Map<String, dynamic> toJson() => _$PlayersToJson(this);
-}
-
 enum Role {
   defender,
   attacker,
   idle,
+}
+
+extension RoleExtension on Role {
+  String get name {
+    switch (this) {
+      case Role.defender:
+        return 'defender';
+      case Role.attacker:
+        return 'attacker';
+      case Role.idle:
+        return 'idle';
+      default:
+        return 'unknown';
+    }
+  }
 }
 
 @JsonSerializable(explicitToJson: true)
@@ -120,9 +112,7 @@ class Hand {
 
 enum PlayerState {
   waiting,
-  playing,
-  finished,
-  left,
+  ready,
 }
 
 @JsonSerializable(explicitToJson: true)
@@ -131,7 +121,6 @@ class Me {
   final Hand? hand;
   final Role role;
   final bool canConfirm;
-  final bool canTake;
   final PlayerState state;
 
   Me({
@@ -139,7 +128,6 @@ class Me {
     required this.hand,
     required this.role,
     required this.canConfirm,
-    required this.canTake,
     required this.state,
   });
 

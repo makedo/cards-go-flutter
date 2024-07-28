@@ -13,16 +13,7 @@ class HomePage extends StatelessWidget {
           },
           child: const Text('Duren'),
         ),
-        _gap,
-        ElevatedButton(
-          onPressed: () {
-            Navigator.of(context).pushNamed('/ws');
-          },
-          child: const Text('ws'),
-        ),
       ]),
     );
   }
-
-  static const _gap = SizedBox(height: 10);
 }

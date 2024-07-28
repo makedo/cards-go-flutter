@@ -2,22 +2,16 @@ package duren
 
 import (
 	"errors"
-	"fmt"
 )
 
 type StateHandler struct {
-	state   State
-	players int
+	state         State
+	playersAmount int
 }
 
 func NewStateHandler(players int) *StateHandler {
-	h := &StateHandler{players: players}
-	h.state = State{
-		table:   nil,
-		state:   GameStateWaiting,
-		players: []*Player{},
-	}
-
+	h := &StateHandler{playersAmount: players}
+	h.state = *NewState()
 	return h
 }
 
@@ -26,11 +20,11 @@ func (h *StateHandler) join(action JoinAction) (State, error) {
 		return h.state, errors.New("game is already started")
 	}
 
-	if len(h.state.players) >= h.players {
+	if len(h.state.players) >= h.playersAmount {
 		return h.state, errors.New("game is full")
 	}
 
-	h.state.addPlayer(action.PlayerId)
+	h.state.addPlayer(NewPlayer(action.PlayerId))
 
 	return h.state, nil
 }
@@ -40,50 +34,46 @@ func (h *StateHandler) ready(action ReadyAction) (State, error) {
 		return h.state, errors.New("game is already started")
 	}
 
-	player := h.state.findWaitingOrFinishedPlayerById(action.PlayerId)
-	if player == nil {
-		return h.state, fmt.Errorf("player with waiting state not found")
+	err := h.state.movePlayerToReadyList(action.PlayerId)
+
+	if err != nil {
+		return h.state, err
 	}
 
-	player.state = PlayerStatePlaying
-	if h.state.areAllPlayersPlaying(h.players) {
-		h.state.startGame()
-	}
+	h.state.startGame(h.playersAmount)
 
 	return h.state, nil
 }
 
 func (h *StateHandler) move(action MoveAction) (State, error) {
 	if !h.state.isStatePlaying() {
-		return h.state, errors.New("game is not started")
+		return h.state, errors.New("move error - game is not started")
 	}
 
-	player := h.state.findPlayingPlayerById(action.PlayerId)
-	if player == nil {
-		return h.state, fmt.Errorf("player with playing state not found")
+	if h.state.attaker == nil {
+		return h.state, errors.New("move error - attaker not found")
 	}
 
-	card := player.hand.findCardById(action.CardId)
-	if card == nil {
-		return h.state, fmt.Errorf("card not found in hand")
+	if h.state.defender == nil {
+		return h.state, errors.New("move error - defender not found")
 	}
 
-	if player.role == PlayerRoleAttacker {
-		err := h.state.addCard(player, card)
+	if h.state.attaker.id == action.PlayerId {
+		err := h.state.moveByAttaker(action.CardId)
 		if err != nil {
 			return h.state, err
 		}
-	} else if player.role == PlayerRoleDefender {
-		err := h.state.coverCard(player, card, action.TableIndex)
+	} else if h.state.defender != nil && h.state.defender.id == action.PlayerId {
+		err := h.state.moveByDefender(action.CardId, action.TableIndex)
 		if err != nil {
 			return h.state, err
 		}
+		h.state.attaker.confirmed = false
+
 	} else {
-		return h.state, errors.New("invalid role")
+		return h.state, errors.New("player is not attaker or defender")
 	}
 
-	h.state.calculatePlayersTakeAndConfirm()
-	h.state.endGame()
 	return h.state, nil
 }
 
@@ -92,22 +82,12 @@ func (h *StateHandler) take(action TakeAction) (State, error) {
 		return h.state, errors.New("game is not started")
 	}
 
-	player := h.state.findPlayingPlayerById(action.PlayerId)
-	if player == nil {
-		return h.state, fmt.Errorf("player with playing state not found")
-	}
-
-	var canTake, err = h.state.canPlayerTake(player)
-	if !canTake {
+	err := h.state.take(action.PlayerId)
+	if err != nil {
 		return h.state, err
 	}
 
-	h.state.moveCardsFromTableToPlayer(player)
-
-	h.state.clearTable()
-	h.state.giveCardsFromDeckToPlayers()
-	h.state.calculatePlayersTakeAndConfirm()
-	h.state.endGame()
+	h.state.attaker.confirmed = false
 
 	return h.state, nil
 }
@@ -117,21 +97,43 @@ func (h *StateHandler) confirm(action ConfirmAction) (State, error) {
 		return h.state, errors.New("game is not started")
 	}
 
-	player := h.state.findPlayingPlayerById(action.PlayerId)
-	if player == nil {
-		return h.state, fmt.Errorf("player with playing state not found")
+	if h.state.attaker != nil && h.state.attaker.id != action.PlayerId {
+		return h.state, errors.New("only attaker can confirm")
 	}
 
-	var canConfirm, err = h.state.canPlayerConfirm(player)
-	if !canConfirm {
+	if !h.state.canPlayerConfirm(h.state.attaker) {
+		return h.state, errors.New("player can not confirm")
+	}
+
+	err := h.state.confirm()
+	if err != nil {
 		return h.state, err
 	}
 
-	h.state.clearTable()
-	h.state.giveCardsFromDeckToPlayers()
-	h.state.recalculatePlayersRoles()
-	h.state.calculatePlayersTakeAndConfirm()
-	h.state.endGame()
+	//If other players will not able to attak - confirm them automatically
+	if len(h.state.table.cards) == 6 || h.state.defender.hand.len() == h.state.table.countNotCoveredCards() {
+		for _, p := range h.state.readyPlayers {
+			if p == h.state.defender {
+				continue
+			}
+			p.confirmed = true
+		}
+	}
+
+	if h.state.canEndRound() {
+		h.state.moveCardsFromTableToDefenderIfDefenderConfirmed()
+		h.state.clearTable()
+		h.state.giveCardsFromDeckToPlayersStaringFromAttaker()
+		h.state.resetDefenderAndAttaker()
+		if !h.state.tryToEndGame() {
+			h.state.resetPlayerFlags()
+		}
+	} else {
+		if h.state.defender.confirmed || h.state.table.areAllCardsCovered() {
+			h.state.setNextAttaker()
+		}
+
+	}
 
 	return h.state, nil
 }

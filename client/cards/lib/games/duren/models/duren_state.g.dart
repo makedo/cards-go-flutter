@@ -11,7 +11,9 @@ DurenState _$DurenStateFromJson(Map<String, dynamic> json) => DurenState(
           ? null
           : DurenTable.fromJson(json['table'] as Map<String, dynamic>),
       my: Me.fromJson(json['my'] as Map<String, dynamic>),
-      players: Players.fromJson(json['players'] as Map<String, dynamic>),
+      players: (json['players'] as List<dynamic>)
+          .map((e) => Player.fromJson(e as Map<String, dynamic>))
+          .toList(),
       state: $enumDecode(_$GameStateEnumMap, json['state']),
     );
 
@@ -19,7 +21,7 @@ Map<String, dynamic> _$DurenStateToJson(DurenState instance) =>
     <String, dynamic>{
       'table': instance.table?.toJson(),
       'my': instance.my.toJson(),
-      'players': instance.players.toJson(),
+      'players': instance.players.map((e) => e.toJson()).toList(),
       'state': _$GameStateEnumMap[instance.state]!,
     };
 
@@ -49,11 +51,13 @@ Map<String, dynamic> _$DurenTableToJson(DurenTable instance) =>
 Player _$PlayerFromJson(Map<String, dynamic> json) => Player(
       hand: json['hand'] as int,
       role: $enumDecode(_$RoleEnumMap, json['role']),
+      state: $enumDecode(_$PlayerStateEnumMap, json['state']),
     );
 
 Map<String, dynamic> _$PlayerToJson(Player instance) => <String, dynamic>{
       'hand': instance.hand,
       'role': _$RoleEnumMap[instance.role]!,
+      'state': _$PlayerStateEnumMap[instance.state]!,
     };
 
 const _$RoleEnumMap = {
@@ -62,32 +66,10 @@ const _$RoleEnumMap = {
   Role.idle: 'idle',
 };
 
-Players _$PlayersFromJson(Map<String, dynamic> json) => Players(
-      left: json['left'] == null
-          ? null
-          : Player.fromJson(json['left'] as Map<String, dynamic>),
-      top: json['top'] == null
-          ? null
-          : Player.fromJson(json['top'] as Map<String, dynamic>),
-      right: json['right'] == null
-          ? null
-          : Player.fromJson(json['right'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$PlayersToJson(Players instance) {
-  final val = <String, dynamic>{};
-
-  void writeNotNull(String key, dynamic value) {
-    if (value != null) {
-      val[key] = value;
-    }
-  }
-
-  writeNotNull('left', instance.left?.toJson());
-  writeNotNull('top', instance.top?.toJson());
-  writeNotNull('right', instance.right?.toJson());
-  return val;
-}
+const _$PlayerStateEnumMap = {
+  PlayerState.waiting: 'waiting',
+  PlayerState.ready: 'ready',
+};
 
 Hand _$HandFromJson(Map<String, dynamic> json) => Hand(
       cards: (json['cards'] as List<dynamic>)
@@ -106,7 +88,6 @@ Me _$MeFromJson(Map<String, dynamic> json) => Me(
           : Hand.fromJson(json['hand'] as Map<String, dynamic>),
       role: $enumDecode(_$RoleEnumMap, json['role']),
       canConfirm: json['canConfirm'] as bool,
-      canTake: json['canTake'] as bool,
       state: $enumDecode(_$PlayerStateEnumMap, json['state']),
     );
 
@@ -115,13 +96,5 @@ Map<String, dynamic> _$MeToJson(Me instance) => <String, dynamic>{
       'hand': instance.hand?.toJson(),
       'role': _$RoleEnumMap[instance.role]!,
       'canConfirm': instance.canConfirm,
-      'canTake': instance.canTake,
       'state': _$PlayerStateEnumMap[instance.state]!,
     };
-
-const _$PlayerStateEnumMap = {
-  PlayerState.waiting: 'waiting',
-  PlayerState.playing: 'playing',
-  PlayerState.finished: 'finished',
-  PlayerState.left: 'left',
-};
