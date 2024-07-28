@@ -1,5 +1,5 @@
-import 'package:cards/widgets/duren/duren_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:cards/games/duren/widgets/duren_game.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Duren',
-      home: DurenWidget(),
+      home: DurenGame(),
     );
   }
 }

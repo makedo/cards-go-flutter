@@ -1,4 +1,4 @@
-import 'package:cards/models/duren/duren_state.dart';
+import 'package:cards/games/duren/models/duren_state.dart';
 import 'package:cards/widgets/playing_card_back_widget.dart';
 import 'package:cards/widgets/playing_card_widget.dart';
 import 'package:flutter/material.dart';

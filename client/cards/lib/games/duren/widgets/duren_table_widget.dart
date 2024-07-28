@@ -1,6 +1,6 @@
-import 'package:cards/models/duren/duren_state.dart';
+import 'package:cards/games/duren/models/duren_state.dart';
 import 'package:cards/models/playing_card.dart';
-import 'package:cards/widgets/duren/duren_table_trump_deck_widget.dart';
+import 'package:cards/games/duren/widgets/duren_table_trump_deck_widget.dart';
 import 'package:cards/widgets/playing_card_stack_widget.dart';
 import 'package:cards/widgets/playing_card_widget.dart';
 import 'package:flutter/material.dart';
@@ -52,7 +52,7 @@ class DurenTableWidget extends StatelessWidget {
         ),
         onWillAccept: (PlayingCard? card) => onDragWillAccept(card),
         onLeave: (PlayingCard? card) => onDragLeave(card),
-        onAccept: (PlayingCard? card) => onDragAccept(card, index),
+        onAccept: (PlayingCard card) => onDragAccept(card, index),
       );
     }
 

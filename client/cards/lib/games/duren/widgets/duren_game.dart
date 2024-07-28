@@ -1,21 +1,21 @@
-import 'package:cards/models/duren/duren_state.dart';
+import 'package:cards/games/duren/models/duren_state.dart';
 import 'package:cards/models/playing_card.dart';
 import 'package:cards/models/playing_card/rank.dart';
 import 'package:cards/models/playing_card/suit.dart';
 import 'package:cards/widgets/playing_card_widget.dart';
 import 'package:cards/widgets/playing_hand_other_widget.dart';
 import 'package:cards/widgets/playing_hand_my_widget.dart';
-import 'package:cards/widgets/duren/duren_table_widget.dart';
+import 'package:cards/games/duren/widgets/duren_table_widget.dart';
 import 'package:flutter/material.dart';
 
-class DurenWidget extends StatefulWidget {
-  const DurenWidget({super.key});
+class DurenGame extends StatefulWidget {
+  const DurenGame({super.key});
 
   @override
-  State<DurenWidget> createState() => _DurenWidgetState();
+  State<DurenGame> createState() => _DurenGameState();
 }
 
-class _DurenWidgetState extends State<DurenWidget> {
+class _DurenGameState extends State<DurenGame> {
   DurenState durenState = DurenState(
     my: Me(
       hand: Hand(cards: [
