@@ -150,6 +150,7 @@ class Hand {
 enum PlayerState {
   waiting,
   ready,
+  watching,
 }
 
 @JsonSerializable(explicitToJson: true)

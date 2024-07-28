@@ -23,6 +23,10 @@ func (h *StateHandler) join(action JoinAction) (State, error) {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
 
+	if h.state.hasPlayer(action.PlayerId) {
+		return h.state, nil
+	}
+
 	if !h.state.isStateWaiting() {
 		return h.state, errors.New("game is already started")
 	}

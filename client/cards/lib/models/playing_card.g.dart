@@ -7,9 +7,9 @@ part of 'playing_card.dart';
 // **************************************************************************
 
 PlayingCard _$PlayingCardFromJson(Map<String, dynamic> json) => PlayingCard(
-      id: json['id'] as int,
+      id: (json['id'] as num).toInt(),
       suit: $enumDecode(_$SuitEnumMap, json['suit']),
-      rank: const RankConverter().fromJson(json['rank'] as int),
+      rank: const RankConverter().fromJson((json['rank'] as num).toInt()),
     );
 
 Map<String, dynamic> _$PlayingCardToJson(PlayingCard instance) =>

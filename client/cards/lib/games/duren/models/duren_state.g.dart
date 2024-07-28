@@ -32,7 +32,7 @@ const _$GameStateEnumMap = {
 };
 
 DurenTable _$DurenTableFromJson(Map<String, dynamic> json) => DurenTable(
-      deck: json['deck'] as int,
+      deck: (json['deck'] as num).toInt(),
       trump: PlayingCard.fromJson(json['trump'] as Map<String, dynamic>),
       cards: (json['cards'] as List<dynamic>)
           .map((e) => (e as List<dynamic>)
@@ -50,7 +50,7 @@ Map<String, dynamic> _$DurenTableToJson(DurenTable instance) =>
     };
 
 Player _$PlayerFromJson(Map<String, dynamic> json) => Player(
-      hand: json['hand'] as int,
+      hand: (json['hand'] as num).toInt(),
       role: $enumDecode(_$RoleEnumMap, json['role']),
       state: $enumDecode(_$PlayerStateEnumMap, json['state']),
     );
@@ -70,6 +70,7 @@ const _$RoleEnumMap = {
 const _$PlayerStateEnumMap = {
   PlayerState.waiting: 'waiting',
   PlayerState.ready: 'ready',
+  PlayerState.watching: 'watching',
 };
 
 Hand _$HandFromJson(Map<String, dynamic> json) => Hand(

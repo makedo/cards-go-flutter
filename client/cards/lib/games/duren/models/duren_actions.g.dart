@@ -8,9 +8,9 @@ part of 'duren_actions.dart';
 
 DurenActionMove _$DurenActionMoveFromJson(Map<String, dynamic> json) =>
     DurenActionMove(
-      cardId: json['cardId'] as int,
+      cardId: (json['cardId'] as num).toInt(),
       playerId: json['playerId'] as String,
-      tableIndex: json['tableIndex'] as int?,
+      tableIndex: (json['tableIndex'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$DurenActionMoveToJson(DurenActionMove instance) =>
@@ -49,6 +49,17 @@ DurenActionReady _$DurenActionReadyFromJson(Map<String, dynamic> json) =>
     );
 
 Map<String, dynamic> _$DurenActionReadyToJson(DurenActionReady instance) =>
+    <String, dynamic>{
+      'type': instance.type,
+      'playerId': instance.playerId,
+    };
+
+DurenActionJoin _$DurenActionJoinFromJson(Map<String, dynamic> json) =>
+    DurenActionJoin(
+      playerId: json['playerId'] as String,
+    );
+
+Map<String, dynamic> _$DurenActionJoinToJson(DurenActionJoin instance) =>
     <String, dynamic>{
       'type': instance.type,
       'playerId': instance.playerId,

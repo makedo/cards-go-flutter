@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
@@ -27,12 +28,28 @@ func main() {
 	go durenHandler.BroadcastState()
 
 	r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		conn, err := upgrader.Upgrade(w, r, nil)
-		if err != nil {
-			log.Fatal(err)
+		playerId := r.URL.Query().Get("playerId")
+		if playerId == "" {
+			log.Println("Missing playerId query parameter")
+			http.Error(w, "Missing playerId query parameter", http.StatusBadRequest)
+			return
 		}
 
-		durenHandler.HandleConnection(conn)
+		_, err := uuid.Parse(playerId)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "Invalid playerId", http.StatusBadRequest)
+			return
+		}
+
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "Failed to upgrade connection", http.StatusInternalServerError)
+			return
+		}
+
+		durenHandler.HandleConnection(conn, playerId)
 	})
 
 	log.Fatal(http.ListenAndServe(":8080", r))

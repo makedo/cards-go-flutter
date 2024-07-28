@@ -12,20 +12,31 @@
 
 - Apply move on client before sending server message +
 
-- Ability to reconnect
+- Ability to reconnect +
+- Player lives the game \ Handle disconnections
 - Timer
-- Player lives the game
+- Allow max 8 connections per game
 
 - Before first round ending and not taking - 5 cards max on table
 
 - Waiting screen
 - End game screen
-- End round animation (cards are moving to defender who took cards, or to t)
+- End round animation (cards are moving to defender who took cards, or out)
 
 - Game menu
 - Games list
 - Games creation
 - Add sounds
+- Watcher view
+
+- Tests
+- Optimisations
+- Check server on memory leaks
+
+- Android
+- Iphone
+- Mac
+- Windows
 
 - Deploy and publish
 

@@ -1,17 +1,15 @@
-import 'dart:convert';
-
-import 'package:cards/config/config.dart';
 import 'package:cards/games/duren/models/duren_actions.dart';
 import 'package:cards/games/duren/models/duren_state.dart';
 import 'package:cards/games/duren/widgets/duren_buttons_row_widget.dart';
+import 'package:cards/games/duren/widgets/duren_table_widget.dart';
 import 'package:cards/models/playing_card.dart';
+import 'package:cards/services/player_service.dart';
+import 'package:cards/services/websocket_service.dart';
 import 'package:cards/widgets/playing_card_widget.dart';
 import 'package:cards/widgets/playing_hand_other_widget.dart';
 import 'package:cards/widgets/playing_hand_my_widget.dart';
-import 'package:cards/games/duren/widgets/duren_table_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 
 class DurenGameWidget extends StatefulWidget {
   const DurenGameWidget({super.key});
@@ -21,18 +19,24 @@ class DurenGameWidget extends StatefulWidget {
 }
 
 class _DurenGameWidgetState extends State<DurenGameWidget> {
-  final _channel = WebSocketChannel.connect(
-    Uri.parse(Config.wsUrl),
-  );
+  final websocketService = WebsocketService();
+  late Future<void> setupFuture;
+
+  Future<void> setup() async {
+    var durenStateNotifier =
+        Provider.of<DurenStateNotifier>(context, listen: false);
+    var playerService = Provider.of<PlayerService>(context, listen: false);
+
+    var playerId = await playerService.getPlayerId();
+    await websocketService.connect(playerId);
+
+    websocketService.listen(durenStateNotifier.updateFromWebSocket);
+  }
 
   @override
   void initState() {
     super.initState();
-    _channel.stream.listen((data) {
-      var durenStateNotifier =
-          Provider.of<DurenStateNotifier>(context, listen: false);
-      durenStateNotifier.updateFromWebSocket(data);
-    });
+    setupFuture = setup();
   }
 
   @override
@@ -45,7 +49,7 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
                 trumpSuit: durenState.table!.trump.suit,
                 cards: durenState.my.hand!.cards,
               )
-            : null;
+            : Container();
 
     renderDurenTableWidget(DurenStateNotifier durenStateNotifier) =>
         durenStateNotifier.durenState!.state == GameState.playing &&
@@ -66,130 +70,126 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
             : const Column(
                 children: [Text('Waiting for starting a game....')],
               );
+    return FutureBuilder<void>(
+      future: setupFuture,
+      builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const LoaderWidget();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else {
+          // Now that you have the player ID and the WebSocket is connected, you can start listening
+          return Consumer<DurenStateNotifier>(
+            builder: (context, durenStateNotifier, child) {
+              var durenState = durenStateNotifier.durenState;
 
-    return Consumer<DurenStateNotifier>(
-      builder: (context, durenStateNotifier, child) {
-        var durenState = durenStateNotifier.durenState;
+              if (durenState == null) {
+                return const LoaderWidget();
+              }
 
-        if (durenState == null) {
-          return const Center(
-            child: SizedBox(
-              width: 50,
-              height: 50,
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
+              Player? topPlayer;
+              Player? rightPlayer;
+              Player? leftPlayer;
+              switch (durenState.players.length) {
+                case 1:
+                  topPlayer = durenState.players[0];
+                  break;
+                case 2:
+                  topPlayer = durenState.players[0];
+                  rightPlayer = durenState.players[1];
+                  break;
+                case 3:
+                  leftPlayer = durenState.players[0];
+                  topPlayer = durenState.players[1];
+                  rightPlayer = durenState.players[2];
+                  break;
+              }
 
-        Player? topPlayer;
-        Player? rightPlayer;
-        Player? leftPlayer;
-        switch (durenState.players.length) {
-          case 1:
-            topPlayer = durenState.players[0];
-            break;
-          case 2:
-            topPlayer = durenState.players[0];
-            rightPlayer = durenState.players[1];
-            break;
-          case 3:
-            leftPlayer = durenState.players[0];
-            topPlayer = durenState.players[1];
-            rightPlayer = durenState.players[2];
-            break;
-        }
-
-        return Column(
-          children: [
-            PlayingHandOtherWidgetContainer(
-              rotated: false,
-              child: PlayingHandOtherTopWidget(
-                player: topPlayer,
-              ),
-            ),
-            topPlayer != null
-                ? Text(topPlayer.role.name,
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 10.0,
-                    ))
-                : Container(),
-            Expanded(
-              child: Row(
+              return Column(
                 children: [
                   PlayingHandOtherWidgetContainer(
-                    rotated: true,
-                    child: PlayingHandOtherLeftWidget(
-                      player: leftPlayer,
+                    rotated: false,
+                    child: PlayingHandOtherTopWidget(
+                      player: topPlayer,
                     ),
                   ),
-                  leftPlayer != null
-                      ? Text(leftPlayer.role.name,
+                  topPlayer != null
+                      ? Text(topPlayer.role.name,
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 10.0,
                           ))
                       : Container(),
                   Expanded(
-                    child: renderDurenTableWidget(durenStateNotifier),
-                  ),
-                  PlayingHandOtherWidgetContainer(
-                    rotated: true,
-                    child: PlayingHandOtherRightWidget(
-                      player: rightPlayer,
+                    child: Row(
+                      children: [
+                        PlayingHandOtherWidgetContainer(
+                          rotated: true,
+                          child: PlayingHandOtherLeftWidget(
+                            player: leftPlayer,
+                          ),
+                        ),
+                        leftPlayer != null
+                            ? Text(leftPlayer.role.name,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 10.0,
+                                ))
+                            : Container(),
+                        Expanded(
+                          child: renderDurenTableWidget(durenStateNotifier),
+                        ),
+                        PlayingHandOtherWidgetContainer(
+                          rotated: true,
+                          child: PlayingHandOtherRightWidget(
+                            player: rightPlayer,
+                          ),
+                        ),
+                        rightPlayer != null
+                            ? Text(rightPlayer.role.name,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 10.0,
+                                ))
+                            : Container()
+                      ],
                     ),
                   ),
-                  rightPlayer != null
-                      ? Text(rightPlayer.role.name,
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 10.0,
-                          ))
-                      : Container()
+                  DurenActionsRowWidget(
+                    durenState: durenState,
+                    onTake: () => _onTake(durenState),
+                    onConfirm: () => _onConfirm(durenState),
+                    onReady: () => _onReady(durenState),
+                  ),
+                  Container(
+                    color: Colors.grey,
+                    child: renderMyHandWidget(durenState),
+                  ),
                 ],
-              ),
-            ),
-            DurenActionsRowWidget(
-              durenState: durenState,
-              onTake: () => _onTake(durenState),
-              onConfirm: () => _onConfirm(durenState),
-              onReady: () => _onReady(durenState),
-            ),
-            Container(
-              color: Colors.grey,
-              child: renderMyHandWidget(durenState),
-            ),
-          ],
-        );
+              );
+            },
+          );
+        }
       },
     );
   }
 
   void _onTake(DurenState durenState) {
-    var action = DurenActionTake(
+    websocketService.send(DurenActionTake(
       playerId: durenState.my.id,
-    );
-
-    var messageJson = jsonEncode(action);
-    _channel.sink.add(messageJson);
+    ));
   }
 
   void _onConfirm(DurenState durenState) {
-    var action = DurenActionConfirm(
+    websocketService.send(DurenActionConfirm(
       playerId: durenState.my.id,
-    );
-
-    var messageJson = jsonEncode(action);
-    _channel.sink.add(messageJson);
+    ));
   }
 
   void _onReady(DurenState durenState) {
-    var action = DurenActionReady(
+    websocketService.send(DurenActionReady(
       playerId: durenState.my.id,
-    );
-
-    var messageJson = jsonEncode(action);
-    _channel.sink.add(messageJson);
+    ));
   }
 
   Function _onDragAccept(DurenStateNotifier durenStateNotifier) {
@@ -200,15 +200,12 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
       //move the card in the local state for smooth experience
       durenStateNotifier.move(card, index);
 
-      var action = DurenActionMove(
+      // Convert the message to a JSON string
+      websocketService.send(DurenActionMove(
         cardId: card.id,
         playerId: durenStateNotifier.durenState!.my.id,
         tableIndex: index,
-      );
-
-      // Convert the message to a JSON string
-      var messageJson = jsonEncode(action);
-      _channel.sink.add(messageJson);
+      ));
     };
   }
 
@@ -221,7 +218,7 @@ class _DurenGameWidgetState extends State<DurenGameWidget> {
   @override
   void dispose() {
     super.dispose();
-    _channel.sink.close();
+    websocketService.disconnect();
   }
 }
 
@@ -309,6 +306,21 @@ class PlayingHandOtherWidgetContainer extends StatelessWidget {
       height: !rotated ? value : null,
       width: rotated ? value : null,
       child: child,
+    );
+  }
+}
+
+class LoaderWidget extends StatelessWidget {
+  const LoaderWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: SizedBox(
+        width: 50,
+        height: 50,
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 }

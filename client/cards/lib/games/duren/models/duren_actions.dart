@@ -1,8 +1,9 @@
+import 'package:cards/services/websocket/message.dart';
 import 'package:json_annotation/json_annotation.dart';
 part 'duren_actions.g.dart';
 
 @JsonSerializable(includeIfNull: true)
-class DurenActionMove {
+class DurenActionMove implements Message {
   @JsonKey(includeFromJson: false, includeToJson: true)
   final String type = 'move';
   final int cardId;
@@ -18,11 +19,12 @@ class DurenActionMove {
   factory DurenActionMove.fromJson(Map<String, dynamic> json) =>
       _$DurenActionMoveFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$DurenActionMoveToJson(this);
 }
 
 @JsonSerializable()
-class DurenActionTake {
+class DurenActionTake implements Message {
   @JsonKey(includeFromJson: false, includeToJson: true)
   final String type = 'take';
   final String playerId;
@@ -34,11 +36,12 @@ class DurenActionTake {
   factory DurenActionTake.fromJson(Map<String, dynamic> json) =>
       _$DurenActionTakeFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$DurenActionTakeToJson(this);
 }
 
 @JsonSerializable()
-class DurenActionConfirm {
+class DurenActionConfirm implements Message {
   @JsonKey(includeFromJson: false, includeToJson: true)
   final String type = 'confirm';
   final String playerId;
@@ -50,13 +53,14 @@ class DurenActionConfirm {
   factory DurenActionConfirm.fromJson(Map<String, dynamic> json) =>
       _$DurenActionConfirmFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$DurenActionConfirmToJson(this);
 }
 
 @JsonSerializable()
-class DurenActionReady {
+class DurenActionReady implements Message {
   @JsonKey(includeFromJson: false, includeToJson: true)
-  final String type = 'playing';
+  final String type = 'ready';
   final String playerId;
 
   DurenActionReady({
@@ -66,5 +70,23 @@ class DurenActionReady {
   factory DurenActionReady.fromJson(Map<String, dynamic> json) =>
       _$DurenActionReadyFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$DurenActionReadyToJson(this);
+}
+
+@JsonSerializable()
+class DurenActionJoin implements Message {
+  @JsonKey(includeFromJson: false, includeToJson: true)
+  final String type = 'join';
+  final String playerId;
+
+  DurenActionJoin({
+    required this.playerId,
+  });
+
+  factory DurenActionJoin.fromJson(Map<String, dynamic> json) =>
+      _$DurenActionJoinFromJson(json);
+
+  @override
+  Map<String, dynamic> toJson() => _$DurenActionJoinToJson(this);
 }

@@ -34,8 +34,9 @@ const (
 type PlayerResponseState string
 
 const (
-	PlayerStateWaiting PlayerResponseState = "waiting"
-	PlayerStateReady   PlayerResponseState = "ready"
+	PlayerStateWaiting  PlayerResponseState = "waiting"
+	PlayerStateWatching PlayerResponseState = "watching"
+	PlayerStateReady    PlayerResponseState = "ready"
 )
 
 type PlayerResponse struct {

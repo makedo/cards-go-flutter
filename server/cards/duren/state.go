@@ -39,13 +39,17 @@ func (s *State) areAllPlayersReady(playersAmount int) bool {
 	return playersAmount == len(s.readyPlayers)
 }
 
-func (s *State) addPlayer(player *Player) error {
+func (s *State) hasPlayer(playerId string) bool {
 	for _, p := range s.players {
-		if p.id == player.id {
-			return errors.New("player already exists")
+		if p.id == playerId {
+			return true
 		}
 	}
 
+	return false
+}
+
+func (s *State) addPlayer(player *Player) error {
 	s.players = append(s.players, player)
 	return nil
 }

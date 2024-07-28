@@ -4,62 +4,62 @@ import (
 	"log"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"
 )
 
 type GameHandler struct {
-	clients      map[string]*websocket.Conn
+	clients      map[*websocket.Conn]string
 	broadcast    chan *State
 	stateHandler *StateHandler
 }
 
 func NewGameHandler(players int) *GameHandler {
 	return &GameHandler{
-		clients:      make(map[string]*websocket.Conn),
+		clients:      make(map[*websocket.Conn]string),
 		broadcast:    make(chan *State),
 		stateHandler: NewStateHandler(players),
 	}
 }
 
-func (h *GameHandler) HandleConnection(conn *websocket.Conn) {
-	var playerId = uuid.New().String()
+func (h *GameHandler) HandleConnection(conn *websocket.Conn, playerId string) {
+	//Limit amount of connections to 10
+	h.clients[conn] = playerId
+
 	var state, err = h.stateHandler.join(JoinAction{
 		PlayerId: playerId,
 	})
+	
 	if err != nil {
 		log.Println(err)
-		//@TODO send error message to client
-		return
+		broadcastState(conn, &state, playerId)
+	} else {
+		h.broadcast <- &state
 	}
-
-	h.clients[playerId] = conn
-	h.broadcast <- &state
 
 	for {
 		var data map[string]interface{}
 		err := conn.ReadJSON(&data)
 		if err != nil {
 			log.Printf("error: %v", err)
-			writeState(conn, &state, playerId)
+			broadcastState(conn, &state, playerId)
 			break
 		}
 
 		// Check the "type" field
 		switch data["type"] {
-		case "playing":
+		case "ready":
 			var action ReadyAction
 			if err := decode(data, &action); err != nil {
 				log.Println(err)
-				writeState(conn, &state, playerId)
+				broadcastState(conn, &state, playerId)
 				break
 			}
 
 			state, err := h.stateHandler.ready(action)
 			if err != nil {
 				log.Println(err)
-				writeState(conn, &state, playerId)
+				broadcastState(conn, &state, playerId)
 				break
 			}
 			h.broadcast <- &state
@@ -67,14 +67,14 @@ func (h *GameHandler) HandleConnection(conn *websocket.Conn) {
 			var action MoveAction
 			if err := decode(data, &action); err != nil {
 				log.Println(err)
-				writeState(conn, &state, playerId)
+				broadcastState(conn, &state, playerId)
 				break
 			}
 
 			state, err := h.stateHandler.move(action)
 			if err != nil {
 				log.Println(err)
-				writeState(conn, &state, playerId)
+				broadcastState(conn, &state, playerId)
 				break
 			}
 			h.broadcast <- &state
@@ -83,14 +83,14 @@ func (h *GameHandler) HandleConnection(conn *websocket.Conn) {
 			var action TakeAction
 			if err := decode(data, &action); err != nil {
 				log.Println(err)
-				writeState(conn, &state, playerId)
+				broadcastState(conn, &state, playerId)
 				break
 			}
 
 			state, err := h.stateHandler.take(action)
 			if err != nil {
 				log.Println(err)
-				writeState(conn, &state, playerId)
+				broadcastState(conn, &state, playerId)
 				break
 			}
 			h.broadcast <- &state
@@ -120,13 +120,13 @@ func (h *GameHandler) BroadcastState() {
 		log.Println("Broadcasting state")
 
 		//broadcast message to all clients
-		for playerId, client := range h.clients {
-			writeState(client, state, playerId)
+		for conn, playerId := range h.clients {
+			broadcastState(conn, state, playerId)
 		}
 	}
 }
 
-func writeState(client *websocket.Conn, state *State, playerId string) {
+func broadcastState(client *websocket.Conn, state *State, playerId string) {
 	message := response(state, playerId)
 	spew.Dump(message)
 	writeErr := client.WriteJSON(message)
@@ -155,13 +155,25 @@ func response(state *State, playerId string) *StateResponseMessage {
 		}
 	}
 
-	meResponse := &MeResponse{
-		Id:         me.id,
-		Hand:       me.hand,
-		CanConfirm: state.canPlayerConfirm(me),
-		State:      state.getPlayerState(me),
-		Role:       state.getPlayerRole(me),
-		CanMove:    state.canPlayerMove(me),
+	var meResponse *MeResponse
+	if me == nil {
+		meResponse = &MeResponse{
+			Id:         playerId,
+			Hand:       nil,
+			CanConfirm: false,
+			State:      PlayerStateWatching,
+			Role:       PlayerRoleIdle,
+			CanMove:    false,
+		}
+	} else {
+		meResponse = &MeResponse{
+			Id:         me.id,
+			Hand:       me.hand,
+			CanConfirm: state.canPlayerConfirm(me),
+			State:      state.getPlayerState(me),
+			Role:       state.getPlayerRole(me),
+			CanMove:    state.canPlayerMove(me),
+		}
 	}
 
 	var playerResponses []*PlayerResponse
