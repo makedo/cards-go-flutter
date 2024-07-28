@@ -16,8 +16,6 @@ func (h *Hand) removeCard(cardToRemove *cards.PlayingCard) {
 			h.Cards = append(h.Cards[:i], h.Cards[i+1:]...)
 		}
 	}
-
-	return
 }
 
 func (h *Hand) findCardById(id int) *cards.PlayingCard {

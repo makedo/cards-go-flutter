@@ -91,7 +91,6 @@ func (h *StateHandler) move(action MoveAction) (State, error) {
 	var table = &h.state.table
 
 	if player.Role == RoleAttacker {
-
 		if !table.isEmpty() {
 			if !table.hasCardOfSameRank(card) {
 				return h.state, errors.New("card of same rank not found on table")

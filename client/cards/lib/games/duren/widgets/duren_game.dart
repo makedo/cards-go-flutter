@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cards/config/config.dart';
+import 'package:cards/games/duren/models/duren_actions.dart';
 import 'package:cards/games/duren/models/duren_state.dart';
 import 'package:cards/models/playing_card.dart';
 import 'package:cards/widgets/playing_card_widget.dart';
@@ -96,15 +97,14 @@ class _DurenGameState extends State<DurenGame> {
 
   Function _onDragAccept(DurenState durenState) {
     return (PlayingCard card, int? index) {
-      var message = {
-        'type': 'move',
-        'card_id': card.id,
-        'player_id': durenState.my.id,
-        'table_index': index,
-      };
+      var action = DurenActionMove(
+        cardId: card.id,
+        playerId: durenState.my.id,
+        tableIndex: index,
+      );
 
       // Convert the message to a JSON string
-      var messageJson = jsonEncode(message);
+      var messageJson = jsonEncode(action);
 
       // Send the message to the WebSocket
       _channel.sink.add(messageJson);

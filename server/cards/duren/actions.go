@@ -17,22 +17,22 @@ type InitAction struct { //Create a room
 
 type JoinAction struct { //Join a room
 	Type     ActionType `json:"type"`
-	PlayerId string     `json:"player_id"`
+	PlayerId string     `json:"playerId"`
 }
 
 type ReadyAction struct { //Ready to play
 	Type     ActionType `json:"type"`
-	PlayerId string     `json:"player_id"`
+	PlayerId string     `json:"playerId"`
 }
 
 type MoveAction struct { //Make a move
 	Type       ActionType `json:"type"`
-	CardId     int        `json:"card_id"`
-	PlayerId   string     `json:"player_id"`
-	TableIndex *int       `json:"table_index"`
+	CardId     int        `json:"cardId"`
+	PlayerId   string     `json:"playerId"`
+	TableIndex *int       `json:"tableIndex"`
 }
 
 type ConfirmAction struct { //Confirm a move
 	Type     ActionType `json:"type"`
-	PlayerId string     `json:"player_id"`
+	PlayerId string     `json:"playerId"`
 }
