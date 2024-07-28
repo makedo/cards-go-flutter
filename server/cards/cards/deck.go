@@ -4,7 +4,37 @@ import (
 	"math/rand"
 )
 
-var allCards []*PlayingCard = initAllCards()
+type DeckAmount int
+
+const DeckAmount4 DeckAmount = 4
+const DeckAmount8 DeckAmount = 8
+const DeckAmount12 DeckAmount = 12
+const DeckAmount16 DeckAmount = 16
+const DeckAmount20 DeckAmount = 20
+const DeckAmount24 DeckAmount = 24
+const DeckAmount28 DeckAmount = 28
+const DeckAmount32 DeckAmount = 32
+const DeckAmount36 DeckAmount = 36
+const DeckAmount40 DeckAmount = 40
+const DeckAmount44 DeckAmount = 44
+const DeckAmount48 DeckAmount = 48
+const DeckAmount52 DeckAmount = 52
+
+var minRanksForDeckAmounts = map[DeckAmount]Rank{
+	DeckAmount52: RankTwo,
+	DeckAmount48: RankThree,
+	DeckAmount44: RankFour,
+	DeckAmount40: RankFive,
+	DeckAmount36: RankSix,
+	DeckAmount32: RankSeven,
+	DeckAmount28: RankEight,
+	DeckAmount24: RankNine,
+	DeckAmount20: RankTen,
+	DeckAmount16: RankJack,
+	DeckAmount12: RankQueen,
+	DeckAmount8:  RankKing,
+	DeckAmount4:  RankAce,
+}
 
 func initAllCards() []*PlayingCard {
 	var allCards []*PlayingCard
@@ -18,6 +48,8 @@ func initAllCards() []*PlayingCard {
 	}
 	return allCards
 }
+
+var allCards []*PlayingCard = initAllCards()
 
 type Deck struct {
 	Cards []*PlayingCard `json:"cards"`
@@ -33,17 +65,9 @@ func newDeck(cards []*PlayingCard) *Deck {
 	}
 }
 
-func NewDeck52() *Deck {
-	cards := make([]*PlayingCard, 52)
-
-	copy(cards, allCards)
-
-	return newDeck(cards)
-}
-
-func NewDeck36() *Deck {
-	const minRank = RankSix
-	cards := make([]*PlayingCard, 36)
+func NewDeckWithAmount(amount DeckAmount) *Deck {
+	minRank := minRanksForDeckAmounts[amount]
+	cards := make([]*PlayingCard, amount)
 
 	var i = 0
 	for _, card := range allCards {
@@ -54,6 +78,7 @@ func NewDeck36() *Deck {
 	}
 
 	return newDeck(cards)
+
 }
 
 func (d *Deck) Last() *PlayingCard {

@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 enum Suit { spades, hearts, diamonds, clubs }
 
 const standardSuites = [
@@ -20,6 +22,14 @@ extension SuitExtension on Suit {
         return '\u2663'; // ASCII for clubs
       default:
         throw Exception("Unknown suit enum: ${toString()}");
+    }
+  }
+
+  Color color() {
+    if (this == Suit.hearts || this == Suit.diamonds) {
+      return Colors.red;
+    } else {
+      return Colors.black;
     }
   }
 }

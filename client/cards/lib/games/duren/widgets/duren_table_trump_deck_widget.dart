@@ -1,6 +1,7 @@
 import 'package:cards/games/duren/models/duren_state.dart';
 import 'package:cards/widgets/playing_card_back_widget.dart';
 import 'package:cards/widgets/playing_card_widget.dart';
+import 'package:cards/widgets/suit_widget.dart';
 import 'package:flutter/material.dart';
 
 class DurenTableTrumpDeckWidget extends StatelessWidget {
@@ -13,17 +14,17 @@ class DurenTableTrumpDeckWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget trumpCardWidget = PlayingCardWidget(card: table.trump);
-    if (table.deck < 1) {
-      trumpCardWidget = Opacity(
-        opacity: 0.5,
-        child: trumpCardWidget,
-      );
+    List<Widget> children = [];
+    if (table.deck >= 1) {
+      children.add(PlayingCardWidget(card: table.trump));
     }
 
-    List<Widget> children = [trumpCardWidget];
     if (table.deck > 1) {
-      children.add(const PlayingCardBackWidget(rotated: true));
+      children.add(PlayingCardBackWidget(rotated: true, amount: table.deck));
+    }
+
+    if (table.deck == 0) {
+      children.add(SuitWidget(suit: table.trump.suit));
     }
 
     return Stack(

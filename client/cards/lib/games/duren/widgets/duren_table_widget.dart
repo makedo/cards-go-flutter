@@ -22,7 +22,11 @@ class DurenTableWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-      DurenTableTrumpDeckWidget(table: table),
+      Container(
+        width: double.infinity,
+        color: Colors.amber,
+        child: DurenTableTrumpDeckWidget(table: table),
+      ),
       Expanded(
         child: Container(
           height: double.infinity,
@@ -52,8 +56,7 @@ class DurenTableWidget extends StatelessWidget {
         ),
         onAcceptWithDetails: (DragTargetDetails<PlayingCard> details) =>
             onDragAccept(details.data, index),
-        onLeave: (PlayingCard? card) =>
-            onDragLeave(card),
+        onLeave: (PlayingCard? card) => onDragLeave(card),
         onWillAcceptWithDetails: (DragTargetDetails<PlayingCard> details) =>
             onDragWillAccept(details),
       );

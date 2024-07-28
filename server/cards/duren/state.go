@@ -175,7 +175,7 @@ func (s *State) endGame() bool {
 }
 
 func (s *State) startGame() {
-	var deck = cards.NewDeck36()
+	var deck = cards.NewDeckWithAmount(cards.DeckAmount36)
 	s.table = &Table{
 		deck:  deck,
 		trump: deck.Last(),

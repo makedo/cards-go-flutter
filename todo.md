@@ -1,5 +1,5 @@
-- Show amount of cards left in deck
-- If no cards left in deck - show just suit
+- Show amount of cards left in deck +
+- If no cards left in deck - show just suit +
 - Move - covers first|last? valid card
 
 - Support up to 4 players

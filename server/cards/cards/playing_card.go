@@ -27,6 +27,7 @@ const RankQueen Rank = 12
 const RankKing Rank = 13
 const RankAce Rank = 14
 
+
 type PlayingCard struct {
 	Id   int  `json:"id"`
 	Suit Suit `json:"suit"`

@@ -14,14 +14,6 @@ class PlayingCardWidget extends StatelessWidget {
 
   const PlayingCardWidget({super.key, required this.card});
 
-  get color {
-    if (card.suit == Suit.hearts || card.suit == Suit.diamonds) {
-      return Colors.red;
-    } else {
-      return Colors.black;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final smallCardIdentifier = Padding(
@@ -37,7 +29,7 @@ class PlayingCardWidget extends StatelessWidget {
                   card.rank.toString(),
                   style: TextStyle(
                     fontSize: 15,
-                    color: color,
+                    color: card.suit.color(),
                     height: 0.9,
                   ),
                 ),
@@ -45,7 +37,7 @@ class PlayingCardWidget extends StatelessWidget {
                   card.suit.symbol(),
                   style: TextStyle(
                     fontSize: 15,
-                    color: color,
+                    color: card.suit.color(),
                     height: 0.9,
                   ),
                 ),
@@ -61,14 +53,14 @@ class PlayingCardWidget extends StatelessWidget {
           card.rank.toString(),
           style: TextStyle(
             fontSize: 25,
-            color: color,
+            color: card.suit.color(),
           ),
         ),
         Text(
           card.suit.symbol(),
           style: TextStyle(
             fontSize: 25,
-            color: color,
+            color: card.suit.color(),
           ),
         ),
       ],
