@@ -19,8 +19,7 @@ class PlayingCardFanWidget extends StatelessWidget {
   Widget build(Object context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final totalCardSize = children.length *
-            (rotated ? PlayingCardWidget.height : PlayingCardWidget.width);
+        final totalCardSize = children.length * (PlayingCardWidget.width);
 
         final totalSpace =
             rotated ? constraints.maxHeight : constraints.maxWidth;

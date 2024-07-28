@@ -1,3 +1,6 @@
+import 'package:cards/models/playing_card.dart';
+import 'package:cards/models/playing_card/rank.dart';
+import 'package:cards/models/playing_card/suit.dart';
 import 'package:cards/widgets/playing_card_back_widget.dart';
 import 'package:cards/widgets/playing_card_widget.dart';
 import 'package:cards/widgets/playing_hand_other_widget.dart';
@@ -12,16 +15,17 @@ class DurenWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(children: [
       Container(
-          color: Colors.grey,
-          height: PlayingCardWidget.width * 0.15,
-          child: const OverflowBox(
-            minHeight: 0.0,
-            maxHeight: PlayingCardWidget.height,
-            alignment: Alignment.bottomCenter,
-            child: PlayingHandOtherWidget(
-              cardsAmount: 6,
-            ),
-          )),
+        color: Colors.grey,
+        height: PlayingCardWidget.width * 0.15,
+        child: const OverflowBox(
+          minHeight: 0.0,
+          maxHeight: PlayingCardWidget.height,
+          alignment: Alignment.bottomCenter,
+          child: PlayingHandOtherWidget(
+            cardsAmount: 6,
+          ),
+        ),
+      ),
       Expanded(
         child: Row(
           children: [
@@ -38,13 +42,7 @@ class DurenWidget extends StatelessWidget {
                 ),
               ),
             ),
-            const Expanded(
-                child: Column(
-              children: [
-                // PlayingCardBackWidget(rotated: false),
-                Expanded(child: PlayingTableWidget()),
-              ],
-            )),
+            const Expanded(child: PlayingTableWidget()),
             Container(
               color: Colors.grey,
               width: PlayingCardWidget.width * 0.15,

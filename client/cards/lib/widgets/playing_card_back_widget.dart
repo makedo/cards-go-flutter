@@ -20,7 +20,7 @@ class PlayingCardBackWidget extends StatelessWidget {
                   color: Colors.black,
                   width: 1), // Adjust the color and width as needed
               borderRadius: BorderRadius.circular(
-                  10), // Adjust the border radius as needed
+                  4), // Adjust the border radius as needed
             )));
   }
 }
