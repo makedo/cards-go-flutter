@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:cards/config/config.dart';
 import 'package:cards/games/duren/models/duren_actions.dart';
 import 'package:cards/games/duren/models/duren_state.dart';
+import 'package:cards/games/duren/widgets/duren_buttons_row_widget.dart';
 import 'package:cards/models/playing_card.dart';
 import 'package:cards/widgets/playing_card_widget.dart';
 import 'package:cards/widgets/playing_hand_other_widget.dart';
@@ -11,14 +12,14 @@ import 'package:cards/games/duren/widgets/duren_table_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-class DurenGame extends StatefulWidget {
-  const DurenGame({super.key});
+class DurenGameWidget extends StatefulWidget {
+  const DurenGameWidget({super.key});
 
   @override
-  State<DurenGame> createState() => _DurenGameState();
+  State<DurenGameWidget> createState() => _DurenGameWidgetState();
 }
 
-class _DurenGameState extends State<DurenGame> {
+class _DurenGameWidgetState extends State<DurenGameWidget> {
   final _channel = WebSocketChannel.connect(
     Uri.parse(Config.wsUrl),
   );
@@ -82,32 +83,10 @@ class _DurenGameState extends State<DurenGame> {
                 ],
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    var action = DurenActionTake(
-                      playerId: durenState.my.id,
-                    );
-
-                    var messageJson = jsonEncode(action);
-                    _channel.sink.add(messageJson);
-                  },
-                  child: const Text('Take'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    var action = DurenActionConfirm(
-                      playerId: durenState.my.id,
-                    );
-
-                    var messageJson = jsonEncode(action);
-                    _channel.sink.add(messageJson);
-                  },
-                  child: const Text('Confirm'),
-                ),
-              ],
+            DurenButtonsRowWidget(
+              my: durenState.my,
+              onTake: () => _onTake(durenState),
+              onConfirm: () => _onConfirm(durenState),
             ),
             Container(
                 color: Colors.grey,
@@ -119,6 +98,24 @@ class _DurenGameState extends State<DurenGame> {
         );
       },
     );
+  }
+
+  void _onTake(DurenState durenState) {
+    var action = DurenActionTake(
+      playerId: durenState.my.id,
+    );
+
+    var messageJson = jsonEncode(action);
+    _channel.sink.add(messageJson);
+  }
+
+  void _onConfirm(DurenState durenState) {
+    var action = DurenActionConfirm(
+      playerId: durenState.my.id,
+    );
+
+    var messageJson = jsonEncode(action);
+    _channel.sink.add(messageJson);
   }
 
   Function _onDragAccept(DurenState durenState) {

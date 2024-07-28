@@ -112,17 +112,19 @@ func (h *GameHandler) BroadcastState() {
 
 func response(state *State, playerId string) *StateResponseMessage {
 	var me *MeResponse
-	var top *PlayerResponse
+	var topPlayer *PlayerResponse
 
 	for _, player := range state.players {
 		if player.Id == playerId {
 			me = &MeResponse{
-				Id:   player.Id,
-				Hand: player.Hand,
-				Role: player.Role,
+				Id:         player.Id,
+				Hand:       player.Hand,
+				Role:       player.Role,
+				CanTake:    player.CanTake,
+				CanConfirm: player.CanConfirm,
 			}
 		} else {
-			top = &PlayerResponse{
+			topPlayer = &PlayerResponse{
 				Hand: player.Hand.len(),
 				Role: player.Role,
 			}
@@ -137,7 +139,7 @@ func response(state *State, playerId string) *StateResponseMessage {
 		},
 		My: me,
 		Players: &PlayersResponse{
-			Top: top,
+			Top: topPlayer,
 		},
 	}
 

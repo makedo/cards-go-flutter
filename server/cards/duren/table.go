@@ -8,6 +8,10 @@ type Table struct {
 	cards [][]*cards.PlayingCard
 }
 
+func (t *Table) clear() {
+	t.cards = [][]*cards.PlayingCard{}
+}
+
 func (t *Table) addCard(card *cards.PlayingCard) {
 	t.cards = append(t.cards, []*cards.PlayingCard{card})
 }
@@ -32,22 +36,25 @@ func (t *Table) hasCardOfSameRank(card *cards.PlayingCard) bool {
 	return false
 }
 
-func (t *Table) hasNotCoveredCard() bool {
-	for _, row := range t.cards {
-		if len(row) == 1 {
-			return true
-		}
-	}
 
-	return false
-}
 
 func (t *Table) areAllCardsCovered() bool {
 	for _, row := range t.cards {
-		if len(row) != 2 {
+		if len(row) == 1 {
 			return false
 		}
 	}
 
 	return true
+}
+
+func (t *Table) countNotCoveredCards() int {
+	var count = 0
+	for _, row := range t.cards {
+		if len(row) == 1 {
+			count++
+		}
+	}
+
+	return count
 }

@@ -41,10 +41,12 @@ func (h *StateHandler) join(action JoinAction) State {
 	}
 
 	var player = &Player{
-		Id:    action.PlayerId,
-		Hand:  &Hand{Cards: h.state.table.deck.Slice(0, 6)},
-		Role:  defineRole(),
-		Ready: false,
+		Id:         action.PlayerId,
+		Hand:       &Hand{Cards: h.state.table.deck.Slice(0, 6)},
+		Role:       defineRole(),
+		Ready:      true,
+		CanTake:    false,
+		CanConfirm: false,
 	}
 
 	h.state.players = append(h.state.players, player)
@@ -72,12 +74,23 @@ func (h *StateHandler) move(action MoveAction) (State, error) {
 			}
 		}
 
-		//check of amount of card rows on table is less or eq 6
-		// chek that amount of opene cards
-		// is no more than cards in defender's hand
-		
+		if len(table.cards) >= 6 {
+			return h.state, errors.New("amount of card rows on table is more than 6")
+		}
+
+		var defender = h.state.findDefender()
+
+		if defender == nil {
+			return h.state, errors.New("defender not found")
+		}
+
+		if table.countNotCoveredCards() >= defender.Hand.len() {
+			return h.state, errors.New("amount of opened cards is more than cards in defender's hand")
+		}
+
 		table.addCard(card)
 		player.Hand.removeCard(card)
+		h.state.calculatePlayersTakeAndConfirm()
 
 		return h.state, nil
 	}
@@ -117,6 +130,7 @@ func (h *StateHandler) move(action MoveAction) (State, error) {
 
 		table.coverCard(card, index)
 		player.Hand.removeCard(card)
+		h.state.calculatePlayersTakeAndConfirm()
 
 		return h.state, nil
 	}
@@ -130,35 +144,19 @@ func (h *StateHandler) take(action TakeAction) (State, error) {
 		return h.state, fmt.Errorf("player not found")
 	}
 
-	if player.Role != RoleDefender {
-		return h.state, errors.New("only defender can take")
+	var canTake, err = h.state.canPlayerTake(player)
+	if !canTake {
+		return h.state, err
 	}
 
-	if h.state.table.isEmpty() {
-		return h.state, errors.New("table is empty")
-	}
-
-	if !h.state.table.hasNotCoveredCard() {
-		return h.state, errors.New("can not take - table has no any rows with more than 1 card")
-	}
-
-	//@TODO for more than 2 players
-
-	//get all cards from table
-	//add them to player's hand
+	//get all cards from table and add them to player's hand
 	for _, row := range h.state.table.cards {
-		for _, card := range row {
-			player.Hand.Cards = append(player.Hand.Cards, card)
-
-		}
+		player.Hand.Cards = append(player.Hand.Cards, row...)
 	}
-	h.state.table.cards = [][]*cards.PlayingCard{}
 
-	for _, p := range h.state.players {
-		for h.state.table.deck.Len() > 0 && p.Hand.len() < 6 {
-			p.Hand.Cards = append(p.Hand.Cards, h.state.table.deck.Pop())
-		}
-	}
+	h.state.clearTable()
+	h.state.giveCardsFromDeckToPlayers()
+	h.state.calculatePlayersTakeAndConfirm()
 
 	return h.state, nil
 }
@@ -169,35 +167,15 @@ func (h *StateHandler) confirm(action ConfirmAction) (State, error) {
 		return h.state, fmt.Errorf("player not found")
 	}
 
-	if player.Role != RoleAttacker {
-		return h.state, errors.New("only attacker can confirm")
+	var canConfirm, err = h.state.canPlayerConfirm(player)
+	if !canConfirm {
+		return h.state, err
 	}
 
-	if h.state.table.isEmpty() {
-		return h.state, errors.New("table is empty")
-	}
-
-	if !h.state.table.areAllCardsCovered() {
-		return h.state, errors.New("not all cards are covered")
-	}
-
-	//@TODO for more than 2 players
-
-	//clear table
-	// change roles
-	// give 6 cards to each player
-	h.state.table.cards = [][]*cards.PlayingCard{}
-
-	for _, p := range h.state.players {
-		if p.Role == RoleAttacker {
-			p.Role = RoleDefender
-		} else if p.Role == RoleDefender {
-			p.Role = RoleAttacker
-		}
-		for h.state.table.deck.Len() > 0 && p.Hand.len() < 6 {
-			p.Hand.Cards = append(p.Hand.Cards, h.state.table.deck.Pop())
-		}
-	}
+	h.state.clearTable()
+	h.state.giveCardsFromDeckToPlayers()
+	h.state.recalculatePlayersRoles()
+	h.state.calculatePlayersTakeAndConfirm()
 
 	return h.state, nil
 }

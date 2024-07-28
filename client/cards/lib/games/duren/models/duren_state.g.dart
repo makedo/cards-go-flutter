@@ -94,10 +94,14 @@ Me _$MeFromJson(Map<String, dynamic> json) => Me(
       id: json['id'] as String,
       hand: Hand.fromJson(json['hand'] as Map<String, dynamic>),
       role: $enumDecode(_$RoleEnumMap, json['role']),
+      canConfirm: json['canConfirm'] as bool,
+      canTake: json['canTake'] as bool,
     );
 
 Map<String, dynamic> _$MeToJson(Me instance) => <String, dynamic>{
       'id': instance.id,
       'hand': instance.hand.toJson(),
       'role': _$RoleEnumMap[instance.role]!,
+      'canConfirm': instance.canConfirm,
+      'canTake': instance.canTake,
     };

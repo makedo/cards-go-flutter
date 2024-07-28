@@ -116,11 +116,15 @@ class Me {
   final String id;
   final Hand hand;
   final Role role;
+  final bool canConfirm;
+  final bool canTake;
 
   Me({
     required this.id,
     required this.hand,
     required this.role,
+    required this.canConfirm,
+    required this.canTake,
   });
 
   factory Me.fromJson(Map<String, dynamic> json) => _$MeFromJson(json);

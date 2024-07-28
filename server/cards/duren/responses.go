@@ -40,7 +40,9 @@ type TableResponse struct {
 }
 
 type MeResponse struct {
-	Id   string `json:"id"`
-	Hand *Hand  `json:"hand"`
-	Role Role   `json:"role"`
+	Id         string `json:"id"`
+	Hand       *Hand  `json:"hand"`
+	Role       Role   `json:"role"`
+	CanTake    bool   `json:"canTake"`
+	CanConfirm bool   `json:"canConfirm"`
 }
