@@ -6,7 +6,8 @@ import (
 	"fmt"
 )
 
-const MAX_CARDS_AMOUNT = 6
+const CARDS_AMOUNT_IN_HAND = 6
+const MAX_CARD_ROWS_AMOUNT_ON_TABLE = 6
 
 type GameState string
 
@@ -39,18 +40,39 @@ func (s *State) areAllPlayersReady(playersAmount int) bool {
 	return playersAmount == len(s.readyPlayers)
 }
 
-func (s *State) hasPlayer(playerId string) bool {
-	for _, p := range s.players {
+func (s *State) isPlayerReady(playerId string) bool {
+	for _, p := range s.readyPlayers {
 		if p.id == playerId {
 			return true
 		}
 	}
 
 	return false
+
 }
 
 func (s *State) addPlayer(player *Player) error {
 	s.players = append(s.players, player)
+	return nil
+}
+
+func (s *State) removePlayer(playerId string) error {
+	var newPlayers []*Player
+	for _, p := range s.players {
+		if p.id != playerId {
+			newPlayers = append(newPlayers, p)
+		}
+	}
+	s.players = newPlayers
+
+	var newReadyPlayers []*Player
+	for _, p := range s.readyPlayers {
+		if p.id != playerId {
+			newReadyPlayers = append(newReadyPlayers, p)
+		}
+	}
+	s.readyPlayers = newReadyPlayers
+
 	return nil
 }
 
@@ -146,22 +168,28 @@ func (s *State) tryToEndGame() bool {
 		return false
 	}
 
+	s.endGame()
+	return true
+}
+
+func (s *State) endGame() {
 	s.readyPlayers = []*Player{}
 	s.state = GameStateWaiting
 	s.defender = nil
 	s.attaker = nil
+	s.table = nil
 
 	for _, player := range s.players {
 		player.confirmed = false
+		player.hand = nil
 	}
-
-	return true
 }
 
-func (s *State) startGame(playersAmount int) {
+func (s *State) startGame(playersAmount int) bool {
 	if !s.areAllPlayersReady(playersAmount) {
-		return
+		return false
 	}
+
 	var deck = cards.NewDeckWithAmount(cards.DeckAmount36)
 	s.table = &Table{
 		deck:  deck,
@@ -173,7 +201,7 @@ func (s *State) startGame(playersAmount int) {
 	copy(s.readyPlayers, s.players)
 
 	for i, player := range s.readyPlayers {
-		player.hand = &Hand{Cards: s.table.deck.Slice(0, MAX_CARDS_AMOUNT)}
+		player.hand = &Hand{Cards: s.table.deck.Slice(0, CARDS_AMOUNT_IN_HAND)}
 		//@TODO set player with lowest trump as attaker
 		//@TODO set next as defender
 		if i == 0 {
@@ -184,6 +212,7 @@ func (s *State) startGame(playersAmount int) {
 	}
 
 	s.state = GameStatePlaying
+	return true
 }
 
 func (s *State) isStateWaiting() bool {
@@ -225,7 +254,7 @@ func (s *State) moveByAttaker(cardId int) error {
 		return errors.New("moveByAttaker error - card not found in hand")
 	}
 
-	if len(s.table.cards) >= MAX_CARDS_AMOUNT {
+	if len(s.table.cards) >= MAX_CARD_ROWS_AMOUNT_ON_TABLE {
 		return errors.New("moveByAttaker error - amount of card rows on table is more than 6")
 	}
 
@@ -376,7 +405,7 @@ func (s *State) giveCardsFromDeckToPlayersStaringFromAttaker() {
 	for i := 0; i <= playerCount; i++ {
 		playerIndex := (*attakerIndex + i) % playerCount
 		player := s.readyPlayers[playerIndex]
-		for s.table.deck.Len() > 0 && player.hand.len() < MAX_CARDS_AMOUNT {
+		for s.table.deck.Len() > 0 && player.hand.len() < CARDS_AMOUNT_IN_HAND {
 			player.hand.Cards = append(player.hand.Cards, s.table.deck.Pop())
 		}
 	}
@@ -447,7 +476,7 @@ func (s *State) canPlayerConfirm(player *Player) bool {
 
 func (s *State) canPlayerMove(player *Player) bool {
 	if player == s.attaker {
-		return !player.confirmed && len(s.table.cards) < MAX_CARDS_AMOUNT
+		return !player.confirmed && len(s.table.cards) < CARDS_AMOUNT_IN_HAND
 	}
 
 	if player == s.defender {

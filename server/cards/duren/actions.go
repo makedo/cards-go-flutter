@@ -3,11 +3,13 @@ package duren
 type ActionType string
 
 const (
-	JoinActionType    ActionType = "join"
-	ReadyActionType   ActionType = "ready"
-	MoveActionType    ActionType = "move"
-	ConfirmActionType ActionType = "confirm"
-	TakeActionType    ActionType = "take"
+	JoinActionType      ActionType = "join"
+	ReadyActionType     ActionType = "ready"
+	MoveActionType      ActionType = "move"
+	ConfirmActionType   ActionType = "confirm"
+	TakeActionType      ActionType = "take"
+	LeaveActionType     ActionType = "leave"
+	WillLeaveActionType ActionType = "willLeave"
 )
 
 type JoinAction struct { //Join a room
@@ -33,6 +35,11 @@ type TakeAction struct { //Take the cards
 }
 
 type ConfirmAction struct { //Confirm a move
+	Type     ActionType `json:"type"`
+	PlayerId string     `json:"playerId"`
+}
+
+type LeaveAction struct { //Confirm a move
 	Type     ActionType `json:"type"`
 	PlayerId string     `json:"playerId"`
 }

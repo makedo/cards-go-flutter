@@ -23,16 +23,16 @@ func NewGameHandler(players int) *GameHandler {
 }
 
 func (h *GameHandler) HandleConnection(conn *websocket.Conn, playerId string) {
-	//Limit amount of connections to 10
+	//TODO Limit amount of connections to 10
 	h.clients[conn] = playerId
 
 	var state, err = h.stateHandler.join(JoinAction{
 		PlayerId: playerId,
 	})
-	
+
 	if err != nil {
 		log.Println(err)
-		broadcastState(conn, &state, playerId)
+		broadcastStateForPlayer(conn, &state, playerId)
 	} else {
 		h.broadcast <- &state
 	}
@@ -42,7 +42,7 @@ func (h *GameHandler) HandleConnection(conn *websocket.Conn, playerId string) {
 		err := conn.ReadJSON(&data)
 		if err != nil {
 			log.Printf("error: %v", err)
-			broadcastState(conn, &state, playerId)
+			broadcastStateForPlayer(conn, &state, playerId)
 			break
 		}
 
@@ -52,14 +52,14 @@ func (h *GameHandler) HandleConnection(conn *websocket.Conn, playerId string) {
 			var action ReadyAction
 			if err := decode(data, &action); err != nil {
 				log.Println(err)
-				broadcastState(conn, &state, playerId)
+				broadcastStateForPlayer(conn, &state, playerId)
 				break
 			}
 
 			state, err := h.stateHandler.ready(action)
 			if err != nil {
 				log.Println(err)
-				broadcastState(conn, &state, playerId)
+				broadcastStateForPlayer(conn, &state, playerId)
 				break
 			}
 			h.broadcast <- &state
@@ -67,14 +67,14 @@ func (h *GameHandler) HandleConnection(conn *websocket.Conn, playerId string) {
 			var action MoveAction
 			if err := decode(data, &action); err != nil {
 				log.Println(err)
-				broadcastState(conn, &state, playerId)
+				broadcastStateForPlayer(conn, &state, playerId)
 				break
 			}
 
 			state, err := h.stateHandler.move(action)
 			if err != nil {
 				log.Println(err)
-				broadcastState(conn, &state, playerId)
+				broadcastStateForPlayer(conn, &state, playerId)
 				break
 			}
 			h.broadcast <- &state
@@ -83,14 +83,14 @@ func (h *GameHandler) HandleConnection(conn *websocket.Conn, playerId string) {
 			var action TakeAction
 			if err := decode(data, &action); err != nil {
 				log.Println(err)
-				broadcastState(conn, &state, playerId)
+				broadcastStateForPlayer(conn, &state, playerId)
 				break
 			}
 
 			state, err := h.stateHandler.take(action)
 			if err != nil {
 				log.Println(err)
-				broadcastState(conn, &state, playerId)
+				broadcastStateForPlayer(conn, &state, playerId)
 				break
 			}
 			h.broadcast <- &state
@@ -121,12 +121,12 @@ func (h *GameHandler) BroadcastState() {
 
 		//broadcast message to all clients
 		for conn, playerId := range h.clients {
-			broadcastState(conn, state, playerId)
+			broadcastStateForPlayer(conn, state, playerId)
 		}
 	}
 }
 
-func broadcastState(client *websocket.Conn, state *State, playerId string) {
+func broadcastStateForPlayer(client *websocket.Conn, state *State, playerId string) {
 	message := response(state, playerId)
 	spew.Dump(message)
 	writeErr := client.WriteJSON(message)

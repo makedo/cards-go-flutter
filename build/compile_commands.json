@@ -1,0 +1,19 @@
+[
+{
+  "directory": "/home/vik/Projects/cards-go-flutter-2/build",
+  "command": "/usr/bin/c++  -DAPPLICATION_ID=\\\"com.example.cards\\\" -I/home/vik/Projects/cards-go-flutter-2/client/cards/linux/flutter/ephemeral -isystem /usr/include/gtk-3.0 -isystem /usr/include/at-spi2-atk/2.0 -isystem /usr/include/at-spi-2.0 -isystem /usr/include/dbus-1.0 -isystem /usr/lib/x86_64-linux-gnu/dbus-1.0/include -isystem /usr/include/gio-unix-2.0 -isystem /usr/include/cairo -isystem /usr/include/pango-1.0 -isystem /usr/include/fribidi -isystem /usr/include/harfbuzz -isystem /usr/include/atk-1.0 -isystem /usr/include/pixman-1 -isystem /usr/include/uuid -isystem /usr/include/freetype2 -isystem /usr/include/libpng16 -isystem /usr/include/gdk-pixbuf-2.0 -isystem /usr/include/libmount -isystem /usr/include/blkid -isystem /usr/include/glib-2.0 -isystem /usr/lib/x86_64-linux-gnu/glib-2.0/include  -g   -Wall -Werror -pthread -o CMakeFiles/cards.dir/main.cc.o -c /home/vik/Projects/cards-go-flutter-2/client/cards/linux/main.cc",
+  "file": "/home/vik/Projects/cards-go-flutter-2/client/cards/linux/main.cc"
+},
+
+{
+  "directory": "/home/vik/Projects/cards-go-flutter-2/build",
+  "command": "/usr/bin/c++  -DAPPLICATION_ID=\\\"com.example.cards\\\" -I/home/vik/Projects/cards-go-flutter-2/client/cards/linux/flutter/ephemeral -isystem /usr/include/gtk-3.0 -isystem /usr/include/at-spi2-atk/2.0 -isystem /usr/include/at-spi-2.0 -isystem /usr/include/dbus-1.0 -isystem /usr/lib/x86_64-linux-gnu/dbus-1.0/include -isystem /usr/include/gio-unix-2.0 -isystem /usr/include/cairo -isystem /usr/include/pango-1.0 -isystem /usr/include/fribidi -isystem /usr/include/harfbuzz -isystem /usr/include/atk-1.0 -isystem /usr/include/pixman-1 -isystem /usr/include/uuid -isystem /usr/include/freetype2 -isystem /usr/include/libpng16 -isystem /usr/include/gdk-pixbuf-2.0 -isystem /usr/include/libmount -isystem /usr/include/blkid -isystem /usr/include/glib-2.0 -isystem /usr/lib/x86_64-linux-gnu/glib-2.0/include  -g   -Wall -Werror -pthread -o CMakeFiles/cards.dir/my_application.cc.o -c /home/vik/Projects/cards-go-flutter-2/client/cards/linux/my_application.cc",
+  "file": "/home/vik/Projects/cards-go-flutter-2/client/cards/linux/my_application.cc"
+},
+
+{
+  "directory": "/home/vik/Projects/cards-go-flutter-2/build",
+  "command": "/usr/bin/c++  -DAPPLICATION_ID=\\\"com.example.cards\\\" -I/home/vik/Projects/cards-go-flutter-2/client/cards/linux/flutter/ephemeral -isystem /usr/include/gtk-3.0 -isystem /usr/include/at-spi2-atk/2.0 -isystem /usr/include/at-spi-2.0 -isystem /usr/include/dbus-1.0 -isystem /usr/lib/x86_64-linux-gnu/dbus-1.0/include -isystem /usr/include/gio-unix-2.0 -isystem /usr/include/cairo -isystem /usr/include/pango-1.0 -isystem /usr/include/fribidi -isystem /usr/include/harfbuzz -isystem /usr/include/atk-1.0 -isystem /usr/include/pixman-1 -isystem /usr/include/uuid -isystem /usr/include/freetype2 -isystem /usr/include/libpng16 -isystem /usr/include/gdk-pixbuf-2.0 -isystem /usr/include/libmount -isystem /usr/include/blkid -isystem /usr/include/glib-2.0 -isystem /usr/lib/x86_64-linux-gnu/glib-2.0/include  -g   -Wall -Werror -pthread -o CMakeFiles/cards.dir/flutter/generated_plugin_registrant.cc.o -c /home/vik/Projects/cards-go-flutter-2/client/cards/linux/flutter/generated_plugin_registrant.cc",
+  "file": "/home/vik/Projects/cards-go-flutter-2/client/cards/linux/flutter/generated_plugin_registrant.cc"
+}
+]

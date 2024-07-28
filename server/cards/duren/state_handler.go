@@ -3,6 +3,7 @@ package duren
 import (
 	"errors"
 	"sync"
+	"time"
 )
 
 type StateHandler struct {
@@ -12,20 +13,19 @@ type StateHandler struct {
 }
 
 const MAX_PLAYERS = 4
+const WAITING_DURATION = 10 * time.Second
 
 func NewStateHandler(players int) *StateHandler {
-	h := &StateHandler{playersAmount: players}
-	h.state = *NewState()
+	h := &StateHandler{
+		playersAmount: players,
+		state:         *NewState(),
+	}
 	return h
 }
 
 func (h *StateHandler) join(action JoinAction) (State, error) {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
-
-	if h.state.hasPlayer(action.PlayerId) {
-		return h.state, nil
-	}
 
 	if !h.state.isStateWaiting() {
 		return h.state, errors.New("game is already started")
