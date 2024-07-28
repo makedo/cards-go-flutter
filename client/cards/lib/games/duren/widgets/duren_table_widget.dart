@@ -50,9 +50,11 @@ class DurenTableWidget extends StatelessWidget {
           opacity: candidateData.isNotEmpty ? 0.5 : 1.0,
           child: PlayingCardWidget(card: cards.first),
         ),
-        onWillAccept: (PlayingCard? card) => onDragWillAccept(card),
+        onAcceptWithDetails: (DragTargetDetails<PlayingCard> details) =>
+            onDragAccept(details.data, index),
         onLeave: (PlayingCard? card) => onDragLeave(card),
-        onAccept: (PlayingCard card) => onDragAccept(card, index),
+        onWillAcceptWithDetails: (DragTargetDetails<PlayingCard> details) =>
+            onDragWillAccept(details),
       );
     }
 

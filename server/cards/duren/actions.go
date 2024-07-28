@@ -26,9 +26,10 @@ type ReadyAction struct { //Ready to play
 }
 
 type MoveAction struct { //Make a move
-	Type     ActionType `json:"type"`
-	CardId   int        `json:"card_id"`
-	PlayerId string     `json:"player_id"`
+	Type       ActionType `json:"type"`
+	CardId     int        `json:"card_id"`
+	PlayerId   string     `json:"player_id"`
+	TableIndex *int       `json:"table_index"`
 }
 
 type ConfirmAction struct { //Confirm a move

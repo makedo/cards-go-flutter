@@ -6,19 +6,18 @@ type Hand struct {
 	Cards []*cards.PlayingCard `json:"cards"`
 }
 
-func (h *Hand) Len() int {
+func (h *Hand) len() int {
 	return len(h.Cards)
 }
 
-func (h *Hand) RemoveCardById(id int) *cards.PlayingCard {
+func (h *Hand) removeCard(cardToRemove *cards.PlayingCard) {
 	for i, card := range h.Cards {
-		if card.Id == id {
+		if card == cardToRemove {
 			h.Cards = append(h.Cards[:i], h.Cards[i+1:]...)
-			return card
 		}
 	}
 
-	return nil
+	return
 }
 
 func (h *Hand) findCardById(id int) *cards.PlayingCard {

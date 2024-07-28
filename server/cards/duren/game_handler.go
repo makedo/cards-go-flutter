@@ -41,15 +41,31 @@ func (h *GameHandler) HandleConnection(conn *websocket.Conn) {
 
 		// Check the "type" field
 		switch data["type"] {
-		case MoveActionType:
+		case "move":
 			var action MoveAction
-			err = mapstructure.Decode(data, &action)
+
+			config := &mapstructure.DecoderConfig{
+				TagName: "json",
+				Result:  &action,
+			}
+
+			decoder, err := mapstructure.NewDecoder(config)
 			if err != nil {
-				log.Printf("error: %v", err)
+				log.Println(err)
 				break
 			}
 
-			state := h.stateHandler.move(action)
+			if err := decoder.Decode(data); err != nil {
+				log.Println(err)
+				break
+			}
+
+			state, err := h.stateHandler.move(action)
+			if err != nil {
+				log.Println(err)
+				break
+			}
+
 			h.broadcast <- &state
 
 		// Add more cases as needed...
@@ -94,7 +110,7 @@ func (h *GameHandler) response(state *State, playerId string) *StateResponseMess
 			}
 		} else {
 			top = &PlayerResponse{
-				Hand: player.Hand.Len(),
+				Hand: player.Hand.len(),
 				Role: player.Role,
 			}
 		}

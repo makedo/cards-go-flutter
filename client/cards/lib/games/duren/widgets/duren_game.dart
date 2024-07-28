@@ -21,6 +21,7 @@ class _DurenGameState extends State<DurenGame> {
   final _channel = WebSocketChannel.connect(
     Uri.parse(Config.wsUrl),
   );
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
@@ -58,17 +59,18 @@ class _DurenGameState extends State<DurenGame> {
                   ),
                   Expanded(
                     child: DragTarget<PlayingCard>(
-                      builder: (context, candidateData, rejectedData) =>
-                          DurenTableWidget(
-                        table: durenState.table,
-                        onDragWillAccept: _onDragWillAccept,
-                        onDragLeave: _onDragLeave,
-                        onDragAccept: _onDragAccept,
-                      ),
-                      onWillAccept: _onDragWillAccept,
-                      onLeave: _onDragLeave,
-                      onAccept: (PlayingCard card) => _onDragAccept(card, null),
-                    ),
+                        builder: (context, candidateData, rejectedData) =>
+                            DurenTableWidget(
+                              table: durenState.table,
+                              onDragWillAccept: _onDragWillAccept,
+                              onDragLeave: _onDragLeave,
+                              onDragAccept: _onDragAccept(durenState),
+                            ),
+                        onWillAcceptWithDetails: _onDragWillAccept,
+                        onLeave: _onDragLeave,
+                        onAcceptWithDetails:
+                            (DragTargetDetails<PlayingCard> details) =>
+                                _onDragAccept(durenState)(details.data, null)),
                   ),
                   PlayingHandOtherWidgetContainer(
                     rotated: true,
@@ -92,17 +94,37 @@ class _DurenGameState extends State<DurenGame> {
     );
   }
 
-  void _onDragAccept(PlayingCard card, int? index) {
-    // durenState.my.hand.remove(card);
-    // durenState.table.add(card, index);
-    // setState(() => durenState = durenState);
+  Function _onDragAccept(DurenState durenState) {
+    return (PlayingCard card, int? index) {
+      var message = {
+        'type': 'move',
+        'card_id': card.id,
+        'player_id': durenState.my.id,
+        'table_index': index,
+      };
+
+      // Convert the message to a JSON string
+      var messageJson = jsonEncode(message);
+
+      // Send the message to the WebSocket
+      _channel.sink.add(messageJson);
+
+      // durenState.my.hand.remove(card);
+      // durenState.table.add(card, index);
+      // setState(() => durenState = durenState);
+    };
   }
 
   void _onDragLeave(PlayingCard? card) {}
 
-  bool _onDragWillAccept(PlayingCard? card) {
-    if (card == null) return false;
+  bool _onDragWillAccept(DragTargetDetails<PlayingCard> details) {
     return true;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _channel.sink.close();
   }
 }
 
