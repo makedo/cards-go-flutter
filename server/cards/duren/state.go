@@ -3,6 +3,7 @@ package duren
 import (
 	"cards/cards"
 	"errors"
+	"fmt"
 )
 
 type GameState string
@@ -20,7 +21,7 @@ type State struct {
 
 func (s *State) findPlayerById(id string) *Player {
 	for _, player := range s.players {
-		if player.Id == id {
+		if player.id == id {
 			return player
 		}
 	}
@@ -29,7 +30,7 @@ func (s *State) findPlayerById(id string) *Player {
 
 func (s *State) findPlayingPlayerById(id string) *Player {
 	player := s.findPlayerById(id)
-	if player != nil && player.State == PlayerStatePlaying {
+	if player != nil && player.state == PlayerStatePlaying {
 		return player
 	}
 
@@ -39,8 +40,8 @@ func (s *State) findPlayingPlayerById(id string) *Player {
 func (s *State) findWaitingOrFinishedPlayerById(id string) *Player {
 	player := s.findPlayerById(id)
 	if player != nil &&
-		(player.State == PlayerStateWaiting ||
-			player.State == PlayerStateFinished) {
+		(player.state == PlayerStateWaiting ||
+			player.state == PlayerStateFinished) {
 		return player
 	}
 
@@ -49,7 +50,7 @@ func (s *State) findWaitingOrFinishedPlayerById(id string) *Player {
 
 func (s *State) areAllPlayersPlaying(playersAmount int) bool {
 	for _, player := range s.players {
-		if player.State != PlayerStatePlaying {
+		if player.state != PlayerStatePlaying {
 			return false
 		}
 	}
@@ -59,18 +60,18 @@ func (s *State) areAllPlayersPlaying(playersAmount int) bool {
 
 func (s *State) addPlayer(id string) {
 	s.players = append(s.players, &Player{
-		Id:         id,
-		Hand:       nil,
-		Role:       PlayerRoleIdle,
-		CanTake:    false,
-		CanConfirm: false,
-		State:      PlayerStateWaiting,
+		id:         id,
+		hand:       nil,
+		role:       PlayerRoleIdle,
+		canTake:    false,
+		canConfirm: false,
+		state:      PlayerStateWaiting,
 	})
 }
 
 func (s *State) findDefender() *Player {
 	for _, p := range s.players {
-		if p.Role == PlayerRoleDefender {
+		if p.role == PlayerRoleDefender {
 			return p
 		}
 	}
@@ -79,7 +80,7 @@ func (s *State) findDefender() *Player {
 }
 
 func (s *State) canPlayerTake(player *Player) (bool, error) {
-	if player.Role != PlayerRoleDefender {
+	if player.role != PlayerRoleDefender {
 		return false, errors.New("only defender can take")
 	}
 
@@ -95,7 +96,7 @@ func (s *State) canPlayerTake(player *Player) (bool, error) {
 }
 
 func (s *State) canPlayerConfirm(player *Player) (bool, error) {
-	if player.Role != PlayerRoleAttacker {
+	if player.role != PlayerRoleAttacker {
 		return false, errors.New("only attacker can confirm")
 	}
 
@@ -112,8 +113,8 @@ func (s *State) canPlayerConfirm(player *Player) (bool, error) {
 
 func (s *State) giveCardsFromDeckToPlayers() {
 	for _, player := range s.players {
-		for s.table.deck.Len() > 0 && player.Hand.len() < 6 {
-			player.Hand.Cards = append(player.Hand.Cards, s.table.deck.Pop())
+		for s.table.deck.Len() > 0 && player.hand.len() < 6 {
+			player.hand.Cards = append(player.hand.Cards, s.table.deck.Pop())
 		}
 	}
 }
@@ -121,18 +122,18 @@ func (s *State) giveCardsFromDeckToPlayers() {
 func (s *State) recalculatePlayersRoles() {
 	for _, player := range s.players {
 		//@todo: for more than 2 players
-		if player.Role == PlayerRoleAttacker {
-			player.Role = PlayerRoleDefender
-		} else if player.Role == PlayerRoleDefender {
-			player.Role = PlayerRoleAttacker
+		if player.role == PlayerRoleAttacker {
+			player.role = PlayerRoleDefender
+		} else if player.role == PlayerRoleDefender {
+			player.role = PlayerRoleAttacker
 		}
 	}
 }
 
 func (s *State) calculatePlayersTakeAndConfirm() {
 	for _, player := range s.players {
-		player.CanTake, _ = s.canPlayerTake(player)
-		player.CanConfirm, _ = s.canPlayerConfirm(player)
+		player.canTake, _ = s.canPlayerTake(player)
+		player.canConfirm, _ = s.canPlayerConfirm(player)
 	}
 }
 
@@ -151,11 +152,11 @@ func (s *State) endGame() bool {
 
 	var finishedPlayers = 0
 	for _, player := range s.players {
-		if player.Hand.len() == 0 {
-			player.State = PlayerStateFinished
+		if player.hand.len() == 0 {
+			player.state = PlayerStateFinished
 		}
 
-		if player.State == PlayerStateFinished {
+		if player.state == PlayerStateFinished {
 			finishedPlayers++
 		}
 	}
@@ -168,8 +169,7 @@ func (s *State) endGame() bool {
 	if defender == nil {
 		return false
 	}
-	defender.State = PlayerStateFinished
-
+	defender.state = PlayerStateFinished
 	s.state = GameStateWaiting
 	return true
 }
@@ -183,12 +183,12 @@ func (s *State) startGame() {
 	}
 
 	for i, player := range s.players {
-		player.Hand = &Hand{Cards: s.table.deck.Slice(0, 6)}
+		player.hand = &Hand{Cards: s.table.deck.Slice(0, 6)}
 		//@TODO for more than 2 players
 		if i == 0 {
-			player.Role = PlayerRoleAttacker
+			player.role = PlayerRoleAttacker
 		} else {
-			player.Role = PlayerRoleDefender
+			player.role = PlayerRoleDefender
 		}
 	}
 
@@ -206,6 +206,74 @@ func (s *State) isStatePlaying() bool {
 func (s *State) moveCardsFromTableToPlayer(player *Player) {
 	//get all cards from table and add them to player's hand
 	for _, row := range s.table.cards {
-		player.Hand.Cards = append(player.Hand.Cards, row...)
+		player.hand.Cards = append(player.hand.Cards, row...)
 	}
+}
+
+func (s *State) addCard(player *Player, card *cards.PlayingCard) error {
+	if !s.table.isEmpty() {
+		if !s.table.hasCardOfSameRank(card) {
+			return errors.New("card of same rank not found on table")
+		}
+	}
+
+	if len(s.table.cards) >= 6 {
+		return errors.New("amount of card rows on table is more than 6")
+	}
+
+	var defender = s.findDefender()
+	if defender == nil {
+		return errors.New("defender not found")
+	}
+
+	if s.table.countNotCoveredCards() >= defender.hand.len() {
+		return errors.New("amount of opened cards is more than cards in defender's hand")
+	}
+
+	s.table.cards = append(s.table.cards, []*cards.PlayingCard{card})
+	player.hand.removeCard(card)
+
+	return nil
+}
+
+func (s *State) coverCard(player *Player, card *cards.PlayingCard, tableIndex *int) error {
+	if s.table.isEmpty() {
+		return errors.New("can not cover card - table is empty")
+	}
+
+	var cardToCover *cards.PlayingCard
+	var index int
+
+	if tableIndex == nil {
+		cardToCover, index = s.table.findFirstNotCoveredCardAndIndex()
+		if cardToCover == nil {
+			return fmt.Errorf("all cards on table are covered")
+		}
+	} else {
+		index = *tableIndex
+
+		if index < 0 || index >= len(s.table.cards) {
+			return fmt.Errorf("invalid table index")
+		}
+
+		if len(s.table.cards[index]) != 1 {
+			return fmt.Errorf("index %d should have only 1 card", index)
+		}
+		cardToCover = s.table.cards[index][0]
+	}
+
+	if cardToCover.Suit == card.Suit {
+		if cardToCover.Rank > card.Rank {
+			return errors.New("invalid rank")
+		}
+	} else {
+		if card.Suit != s.table.trump.Suit {
+			return errors.New("invalid suit")
+		}
+	}
+
+	s.table.cards[index] = append(s.table.cards[index], card)
+	player.hand.removeCard(card)
+
+	return nil
 }

@@ -45,7 +45,7 @@ func (h *StateHandler) ready(action ReadyAction) (State, error) {
 		return h.state, fmt.Errorf("player with waiting state not found")
 	}
 
-	player.State = PlayerStatePlaying
+	player.state = PlayerStatePlaying
 	if h.state.areAllPlayersPlaying(h.players) {
 		h.state.startGame()
 	}
@@ -63,86 +63,28 @@ func (h *StateHandler) move(action MoveAction) (State, error) {
 		return h.state, fmt.Errorf("player with playing state not found")
 	}
 
-	card := player.Hand.findCardById(action.CardId)
+	card := player.hand.findCardById(action.CardId)
 	if card == nil {
 		return h.state, fmt.Errorf("card not found in hand")
 	}
 
-	var table = h.state.table
-
-	if player.Role == PlayerRoleAttacker {
-		if !table.isEmpty() {
-			if !table.hasCardOfSameRank(card) {
-				return h.state, errors.New("card of same rank not found on table")
-			}
+	if player.role == PlayerRoleAttacker {
+		err := h.state.addCard(player, card)
+		if err != nil {
+			return h.state, err
 		}
-
-		if len(table.cards) >= 6 {
-			return h.state, errors.New("amount of card rows on table is more than 6")
+	} else if player.role == PlayerRoleDefender {
+		err := h.state.coverCard(player, card, action.TableIndex)
+		if err != nil {
+			return h.state, err
 		}
-
-		var defender = h.state.findDefender()
-
-		if defender == nil {
-			return h.state, errors.New("defender not found")
-		}
-
-		if table.countNotCoveredCards() >= defender.Hand.len() {
-			return h.state, errors.New("amount of opened cards is more than cards in defender's hand")
-		}
-
-		table.addCard(card)
-		player.Hand.removeCard(card)
-
-		h.state.calculatePlayersTakeAndConfirm()
-		h.state.endGame()
-
-		return h.state, nil
+	} else {
+		return h.state, errors.New("invalid role")
 	}
 
-	if player.Role == PlayerRoleDefender {
-
-		if table.isEmpty() {
-			return h.state, errors.New("defender can not move card - table is empty")
-		}
-
-		var index int
-		if (action.TableIndex == nil) || (*action.TableIndex < 0) {
-			index = len(table.cards) - 1
-		} else {
-			index = *action.TableIndex
-		}
-
-		if index >= len(table.cards) {
-			return h.state, fmt.Errorf("invalid table index")
-		}
-
-		if len(table.cards[index]) != 1 {
-			return h.state, fmt.Errorf("index %d should have only 1 card", index)
-		}
-
-		var cardToCover = table.cards[index][0]
-
-		if cardToCover.Suit == card.Suit {
-			if cardToCover.Rank > card.Rank {
-				return h.state, errors.New("invalid rank")
-			}
-		} else {
-			if card.Suit != table.trump.Suit {
-				return h.state, errors.New("invalid suit")
-			}
-		}
-
-		table.coverCard(card, index)
-		player.Hand.removeCard(card)
-
-		h.state.calculatePlayersTakeAndConfirm()
-		h.state.endGame()
-
-		return h.state, nil
-	}
-
-	return h.state, errors.New("invalid role")
+	h.state.calculatePlayersTakeAndConfirm()
+	h.state.endGame()
+	return h.state, nil
 }
 
 func (h *StateHandler) take(action TakeAction) (State, error) {

@@ -1,12 +1,12 @@
 package duren
 
 type Player struct {
-	Id         string      `json:"id"`
-	Hand       *Hand       `json:"hand"`
-	Role       PlayerRole  `json:"role"`
-	CanTake    bool        `json:"canTake"`
-	CanConfirm bool        `json:"canConfirm"`
-	State      PlayerState `json:"state"`
+	id         string
+	hand       *Hand
+	role       PlayerRole
+	canTake    bool
+	canConfirm bool
+	state      PlayerState
 }
 
 type PlayerRole string

@@ -136,19 +136,19 @@ func response(state *State, playerId string) *StateResponseMessage {
 	var tableResponse *TableResponse = nil
 
 	for _, player := range state.players {
-		if player.Id == playerId {
+		if player.id == playerId {
 			me = &MeResponse{
-				Id:         player.Id,
-				Hand:       player.Hand,
-				Role:       player.Role,
-				CanTake:    player.CanTake,
-				CanConfirm: player.CanConfirm,
-				State:      player.State,
+				Id:         player.id,
+				Hand:       player.hand,
+				Role:       player.role,
+				CanTake:    player.canTake,
+				CanConfirm: player.canConfirm,
+				State:      player.state,
 			}
 		} else {
 			topPlayer = &PlayerResponse{
-				Hand: player.Hand.len(),
-				Role: player.Role,
+				Hand: player.hand.len(),
+				Role: player.role,
 			}
 		}
 	}

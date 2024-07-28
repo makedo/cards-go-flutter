@@ -12,14 +12,6 @@ func (t *Table) clear() {
 	t.cards = [][]*cards.PlayingCard{}
 }
 
-func (t *Table) addCard(card *cards.PlayingCard) {
-	t.cards = append(t.cards, []*cards.PlayingCard{card})
-}
-
-func (t *Table) coverCard(card *cards.PlayingCard, index int) {
-	t.cards[index] = append(t.cards[index], card)
-}
-
 func (t *Table) isEmpty() bool {
 	return len(t.cards) == 0
 }
@@ -35,8 +27,6 @@ func (t *Table) hasCardOfSameRank(card *cards.PlayingCard) bool {
 
 	return false
 }
-
-
 
 func (t *Table) areAllCardsCovered() bool {
 	for _, row := range t.cards {
@@ -57,4 +47,14 @@ func (t *Table) countNotCoveredCards() int {
 	}
 
 	return count
+}
+
+func (t *Table) findFirstNotCoveredCardAndIndex() (*cards.PlayingCard, int) {
+	for i, row := range t.cards {
+		if len(row) == 1 {
+			return row[0], i
+		}
+	}
+
+	return nil, 0
 }

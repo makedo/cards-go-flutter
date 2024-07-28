@@ -1,6 +1,6 @@
 - Show amount of cards left in deck +
 - If no cards left in deck - show just suit +
-- Move - covers first|last? valid card
+- Move - covers first valid card +
 
 - Support up to 4 players
  - give cards from deck starting from attacker
@@ -18,13 +18,17 @@
 - Game menu
 - Games list
 - Games creation
+- Add sounds
 
 - Deploy and publish
 
 - Games and State storing
 
-- 125
+
 - duren previdnyi
-- poker
+- 125
 
 - monetisation ???
+
+- 1000
+- poker
