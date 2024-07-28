@@ -82,13 +82,39 @@ class _DurenGameState extends State<DurenGame> {
                 ],
               ),
             ),
-            Container(
-              color: Colors.grey,
-              height: PlayingCardWidget.height,
-              child: PlayingHandMyWidget(
-                cards: durenState.my.hand.cards,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    var action = DurenActionTake(
+                      playerId: durenState.my.id,
+                    );
+
+                    var messageJson = jsonEncode(action);
+                    _channel.sink.add(messageJson);
+                  },
+                  child: const Text('Take'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    var action = DurenActionConfirm(
+                      playerId: durenState.my.id,
+                    );
+
+                    var messageJson = jsonEncode(action);
+                    _channel.sink.add(messageJson);
+                  },
+                  child: const Text('Confirm'),
+                ),
+              ],
             ),
+            Container(
+                color: Colors.grey,
+                child: PlayingHandMyWidget(
+                  trumpSuit: durenState.table.trump.suit,
+                  cards: durenState.my.hand.cards,
+                )),
           ],
         );
       },
@@ -105,8 +131,6 @@ class _DurenGameState extends State<DurenGame> {
 
       // Convert the message to a JSON string
       var messageJson = jsonEncode(action);
-
-      // Send the message to the WebSocket
       _channel.sink.add(messageJson);
 
       // durenState.my.hand.remove(card);

@@ -20,3 +20,35 @@ class DurenActionMove {
 
   Map<String, dynamic> toJson() => _$DurenActionMoveToJson(this);
 }
+
+@JsonSerializable()
+class DurenActionTake {
+  @JsonKey(includeFromJson: false, includeToJson: true)
+  final String type = 'take';
+  final String playerId;
+
+  DurenActionTake({
+    required this.playerId,
+  });
+
+  factory DurenActionTake.fromJson(Map<String, dynamic> json) =>
+      _$DurenActionTakeFromJson(json);
+
+  Map<String, dynamic> toJson() => _$DurenActionTakeToJson(this);
+}
+
+@JsonSerializable()
+class DurenActionConfirm {
+  @JsonKey(includeFromJson: false, includeToJson: true)
+  final String type = 'confirm';
+  final String playerId;
+
+  DurenActionConfirm({
+    required this.playerId,
+  });
+
+  factory DurenActionConfirm.fromJson(Map<String, dynamic> json) =>
+      _$DurenActionConfirmFromJson(json);
+
+  Map<String, dynamic> toJson() => _$DurenActionConfirmToJson(this);
+}

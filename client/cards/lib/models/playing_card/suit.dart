@@ -1,9 +1,9 @@
 enum Suit { spades, hearts, diamonds, clubs }
 
 const standardSuites = [
-  Suit.spades,
   Suit.hearts,
   Suit.diamonds,
+  Suit.spades,
   Suit.clubs,
 ];
 

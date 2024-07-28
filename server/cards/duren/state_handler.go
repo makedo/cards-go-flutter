@@ -52,31 +52,6 @@ func (h *StateHandler) join(action JoinAction) State {
 	return h.state
 }
 
-func (h *StateHandler) ready(playerId string) State {
-	player := h.state.findPlayerById(playerId)
-	player.Ready = true
-
-	if h.state.areAllPlayersReady() {
-		h.start()
-	}
-
-	return h.state
-}
-
-func (h *StateHandler) start() State {
-	for i, player := range h.state.players {
-		player.Hand = &Hand{Cards: h.state.table.deck.Slice(0, 6)}
-		if i == 0 {
-			player.Role = RoleAttacker
-		} else {
-			player.Role = RoleDefender
-		}
-	}
-
-	return h.state
-}
-
-// @TODO error handling
 func (h *StateHandler) move(action MoveAction) (State, error) {
 	player := h.state.findPlayerById(action.PlayerId)
 	if player == nil {
@@ -97,6 +72,10 @@ func (h *StateHandler) move(action MoveAction) (State, error) {
 			}
 		}
 
+		//check of amount of card rows on table is less or eq 6
+		// chek that amount of opene cards
+		// is no more than cards in defender's hand
+		
 		table.addCard(card)
 		player.Hand.removeCard(card)
 
@@ -143,4 +122,106 @@ func (h *StateHandler) move(action MoveAction) (State, error) {
 	}
 
 	return h.state, errors.New("invalid role")
+}
+
+func (h *StateHandler) take(action TakeAction) (State, error) {
+	player := h.state.findPlayerById(action.PlayerId)
+	if player == nil {
+		return h.state, fmt.Errorf("player not found")
+	}
+
+	if player.Role != RoleDefender {
+		return h.state, errors.New("only defender can take")
+	}
+
+	if h.state.table.isEmpty() {
+		return h.state, errors.New("table is empty")
+	}
+
+	if !h.state.table.hasNotCoveredCard() {
+		return h.state, errors.New("can not take - table has no any rows with more than 1 card")
+	}
+
+	//@TODO for more than 2 players
+
+	//get all cards from table
+	//add them to player's hand
+	for _, row := range h.state.table.cards {
+		for _, card := range row {
+			player.Hand.Cards = append(player.Hand.Cards, card)
+
+		}
+	}
+	h.state.table.cards = [][]*cards.PlayingCard{}
+
+	for _, p := range h.state.players {
+		for h.state.table.deck.Len() > 0 && p.Hand.len() < 6 {
+			p.Hand.Cards = append(p.Hand.Cards, h.state.table.deck.Pop())
+		}
+	}
+
+	return h.state, nil
+}
+
+func (h *StateHandler) confirm(action ConfirmAction) (State, error) {
+	player := h.state.findPlayerById(action.PlayerId)
+	if player == nil {
+		return h.state, fmt.Errorf("player not found")
+	}
+
+	if player.Role != RoleAttacker {
+		return h.state, errors.New("only attacker can confirm")
+	}
+
+	if h.state.table.isEmpty() {
+		return h.state, errors.New("table is empty")
+	}
+
+	if !h.state.table.areAllCardsCovered() {
+		return h.state, errors.New("not all cards are covered")
+	}
+
+	//@TODO for more than 2 players
+
+	//clear table
+	// change roles
+	// give 6 cards to each player
+	h.state.table.cards = [][]*cards.PlayingCard{}
+
+	for _, p := range h.state.players {
+		if p.Role == RoleAttacker {
+			p.Role = RoleDefender
+		} else if p.Role == RoleDefender {
+			p.Role = RoleAttacker
+		}
+		for h.state.table.deck.Len() > 0 && p.Hand.len() < 6 {
+			p.Hand.Cards = append(p.Hand.Cards, h.state.table.deck.Pop())
+		}
+	}
+
+	return h.state, nil
+}
+
+func (h *StateHandler) ready(playerId string) State {
+	player := h.state.findPlayerById(playerId)
+	player.Ready = true
+
+	if h.state.areAllPlayersReady() {
+		h.start()
+	}
+
+	return h.state
+}
+
+func (h *StateHandler) start() State {
+	for i, player := range h.state.players {
+		player.Hand = &Hand{Cards: h.state.table.deck.Slice(0, 6)}
+		if i == 0 {
+			player.Role = RoleAttacker
+		} else {
+			player.Role = RoleDefender
+		}
+	}
+
+	return h.state
 }

@@ -1,7 +1,6 @@
 package duren
 
 type ActionType string
-
 const (
 	InitActionType    ActionType = "init"
 	JoinActionType    ActionType = "join"
@@ -20,10 +19,6 @@ type JoinAction struct { //Join a room
 	PlayerId string     `json:"playerId"`
 }
 
-type ReadyAction struct { //Ready to play
-	Type     ActionType `json:"type"`
-	PlayerId string     `json:"playerId"`
-}
 
 type MoveAction struct { //Make a move
 	Type       ActionType `json:"type"`
@@ -32,7 +27,20 @@ type MoveAction struct { //Make a move
 	TableIndex *int       `json:"tableIndex"`
 }
 
+type TakeAction struct { //Take the cards
+	Type     ActionType `json:"type"`
+	PlayerId string     `json:"playerId"`
+}
+
 type ConfirmAction struct { //Confirm a move
 	Type     ActionType `json:"type"`
 	PlayerId string     `json:"playerId"`
 }
+
+
+type ReadyAction struct { //Ready to play
+	Type     ActionType `json:"type"`
+	PlayerId string     `json:"playerId"`
+}
+
+

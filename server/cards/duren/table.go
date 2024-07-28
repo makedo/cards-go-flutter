@@ -31,3 +31,23 @@ func (t *Table) hasCardOfSameRank(card *cards.PlayingCard) bool {
 
 	return false
 }
+
+func (t *Table) hasNotCoveredCard() bool {
+	for _, row := range t.cards {
+		if len(row) == 1 {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (t *Table) areAllCardsCovered() bool {
+	for _, row := range t.cards {
+		if len(row) != 2 {
+			return false
+		}
+	}
+
+	return true
+}

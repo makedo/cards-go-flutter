@@ -65,7 +65,8 @@ func (d *Deck) Len() int {
 }
 
 func (d *Deck) Slice(start, end int) []*PlayingCard {
-	slicedCards := d.Cards[start:end]
+	slicedCards := make([]*PlayingCard, end-start)
+	copy(slicedCards, d.Cards[start:end])
 	d.Cards = d.Cards[end:]
 	return slicedCards
 }

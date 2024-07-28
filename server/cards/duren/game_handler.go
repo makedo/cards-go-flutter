@@ -43,19 +43,7 @@ func (h *GameHandler) HandleConnection(conn *websocket.Conn) {
 		switch data["type"] {
 		case "move":
 			var action MoveAction
-
-			config := &mapstructure.DecoderConfig{
-				TagName: "json",
-				Result:  &action,
-			}
-
-			decoder, err := mapstructure.NewDecoder(config)
-			if err != nil {
-				log.Println(err)
-				break
-			}
-
-			if err := decoder.Decode(data); err != nil {
+			if err := decode(data, &action); err != nil {
 				log.Println(err)
 				break
 			}
@@ -65,9 +53,34 @@ func (h *GameHandler) HandleConnection(conn *websocket.Conn) {
 				log.Println(err)
 				break
 			}
-
 			h.broadcast <- &state
 
+		case "take":
+			var action TakeAction
+			if err := decode(data, &action); err != nil {
+				log.Println(err)
+				break
+			}
+
+			state, err := h.stateHandler.take(action)
+			if err != nil {
+				log.Println(err)
+				break
+			}
+			h.broadcast <- &state
+		case "confirm":
+			var action ConfirmAction
+			if err := decode(data, &action); err != nil {
+				log.Println(err)
+				break
+			}
+
+			state, err := h.stateHandler.confirm(action)
+			if err != nil {
+				log.Println(err)
+				break
+			}
+			h.broadcast <- &state
 		// Add more cases as needed...
 		default:
 			log.Printf("Unknown type: %v", data["type"])
@@ -88,7 +101,7 @@ func (h *GameHandler) BroadcastState() {
 
 		//broadcast message to all clients
 		for playerId, client := range h.clients {
-			message := h.response(state, playerId)
+			message := response(state, playerId)
 			writeErr := client.WriteJSON(message)
 			if writeErr != nil {
 				log.Printf("error: %v", writeErr)
@@ -97,7 +110,7 @@ func (h *GameHandler) BroadcastState() {
 	}
 }
 
-func (h *GameHandler) response(state *State, playerId string) *StateResponseMessage {
+func response(state *State, playerId string) *StateResponseMessage {
 	var me *MeResponse
 	var top *PlayerResponse
 
@@ -129,4 +142,19 @@ func (h *GameHandler) response(state *State, playerId string) *StateResponseMess
 	}
 
 	return newStateResponseMessage(responseState)
+}
+
+func decode(data map[string]interface{}, result interface{}) error {
+	config := &mapstructure.DecoderConfig{
+		TagName: "json",
+		Result:  result,
+	}
+	decoder, err := mapstructure.NewDecoder(config)
+	if err != nil {
+		return err
+	}
+	if err := decoder.Decode(data); err != nil {
+		return err
+	}
+	return nil
 }
