@@ -9,12 +9,20 @@ class PlayingCardWidgetDraggable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final playingCardWidget = PlayingCardWidget(card: card);
     return Draggable<PlayingCard>(
-      data: card,
-      feedback: PlayingCardWidget(card: card),
-      childWhenDragging:
-          Opacity(opacity: 0.5, child: PlayingCardWidget(card: card)),
-      child: PlayingCardWidget(card: card),
-    );
+        data: card,
+        feedback: Transform.rotate(
+          angle: -0.1,
+          child: playingCardWidget,
+        ),
+        childWhenDragging: Opacity(
+          opacity: 0.5,
+          child: playingCardWidget,
+        ),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: playingCardWidget,
+        ));
   }
 }

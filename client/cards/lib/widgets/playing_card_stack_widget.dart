@@ -20,7 +20,7 @@ class PlayingCardStackWidget extends StatelessWidget {
       height: PlayingCardWidget.height + _topOffset * 5,
       child: Stack(
         children: [
-          for (var i = max(0, cards.length - 6); i < cards.length; i++)
+          for (var i = max(0, cards.length - 2); i < cards.length; i++)
             Positioned(
               top: i * _topOffset,
               left: i * _leftOffset,

@@ -74,33 +74,30 @@ class PlayingCardWidget extends StatelessWidget {
       ],
     );
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: Card(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            side: const BorderSide(
-              color: Colors.black,
-              width: 1,
-            ), // Adjust the color and width as needed
-            borderRadius: BorderRadius.circular(
-              4,
-            ), // Adjust the border radius as needed
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              smallCardIdentifier,
-              Expanded(child: mainCardIdentifier),
-              Transform.rotate(
-                angle: pi,
-                child: smallCardIdentifier,
-              )
-            ],
-          ),
+    return SizedBox(
+      width: width,
+      height: height,
+      child: Card(
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(
+            color: Colors.black,
+            width: 1,
+          ), // Adjust the color and width as needed
+          borderRadius: BorderRadius.circular(
+            4,
+          ), // Adjust the border radius as needed
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            smallCardIdentifier,
+            Expanded(child: mainCardIdentifier),
+            Transform.rotate(
+              angle: pi,
+              child: smallCardIdentifier,
+            )
+          ],
         ),
       ),
     );

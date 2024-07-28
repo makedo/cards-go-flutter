@@ -1,30 +1,28 @@
+import 'package:cards/models/duren/duren_state.dart';
 import 'package:cards/models/playing_card.dart';
-import 'package:cards/widgets/playing_card_back_widget.dart';
+import 'package:cards/widgets/duren/duren_table_trump_deck_widget.dart';
 import 'package:cards/widgets/playing_card_stack_widget.dart';
 import 'package:cards/widgets/playing_card_widget.dart';
 import 'package:flutter/material.dart';
-import 'dart:math';
 
 class DurenTableWidget extends StatelessWidget {
-  final PlayingCard trumpCard;
-  final List<List<PlayingCard>> tableCards;
+  final DurenTable table;
+  final Function onDragWillAccept;
+  final Function onDragLeave;
+  final Function onDragAccept;
 
   const DurenTableWidget({
     super.key,
-    required this.trumpCard,
-    this.tableCards = const [[]],
+    required this.table,
+    required this.onDragWillAccept,
+    required this.onDragLeave,
+    required this.onDragAccept,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-      Stack(
-        alignment: Alignment.topCenter,
-        children: [
-          PlayingCardWidget(card: trumpCard),
-          const PlayingCardBackWidget(rotated: true),
-        ],
-      ),
+      DurenTableTrumpDeckWidget(table: table),
       Expanded(
         child: Container(
           height: double.infinity,
@@ -33,12 +31,31 @@ class DurenTableWidget extends StatelessWidget {
           child: Wrap(
             alignment: WrapAlignment.center,
             runAlignment: WrapAlignment.center,
-            children: tableCards
-                .map((cards) => PlayingCardStackWidget(cards: cards))
+            children: table.cards
+                .asMap()
+                .map((index, cards) =>
+                    MapEntry(index, _buildCardStack(cards, index)))
+                .values
                 .toList(),
           ),
         ),
       ),
     ]);
+  }
+
+  Widget _buildCardStack(List<PlayingCard> cards, int index) {
+    if (cards.length == 1) {
+      return DragTarget<PlayingCard>(
+        builder: (context, candidateData, rejectedData) => Opacity(
+          opacity: candidateData.isNotEmpty ? 0.5 : 1.0,
+          child: PlayingCardWidget(card: cards.first),
+        ),
+        onWillAccept: (PlayingCard? card) => onDragWillAccept(card),
+        onLeave: (PlayingCard? card) => onDragLeave(card),
+        onAccept: (PlayingCard? card) => onDragAccept(card, index),
+      );
+    }
+
+    return PlayingCardStackWidget(cards: cards);
   }
 }

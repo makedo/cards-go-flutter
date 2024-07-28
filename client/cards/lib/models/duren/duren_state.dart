@@ -22,6 +22,14 @@ class DurenTable {
     required this.trump,
     required this.cards,
   });
+
+  void add(PlayingCard card, int? index) {
+    if (cards.isEmpty || cards.last.length >= 2) {
+      cards.add([]);
+    }
+
+    cards[index ?? cards.length - 1].add(card);
+  }
 }
 
 class Player {
@@ -35,15 +43,23 @@ class Player {
 }
 
 class Players {
-  final Player left;
-  final Player top;
-  final Player right;
+  final Player? left;
+  final Player? top;
+  final Player? right;
 
   Players({
     required this.left,
     required this.top,
     required this.right,
   });
+
+  int get topPlayerCards => top?.cards ?? 0;
+  int get leftPlayerCards => left?.cards ?? 0;
+  int get rightPlayerCards => right?.cards ?? 0;
+
+  Role get topPlayerRole => top?.role ?? Role.idle;
+  Role get leftPlayerRole => left?.role ?? Role.idle;
+  Role get rightPlayerRole => right?.role ?? Role.idle;
 }
 
 enum Role {
@@ -52,8 +68,20 @@ enum Role {
   idle,
 }
 
+class Hand {
+  final List<PlayingCard> cards;
+
+  Hand({
+    required this.cards,
+  });
+
+  void remove(PlayingCard card) {
+    cards.remove(card);
+  }
+}
+
 class Me {
-  final List<PlayingCard> hand;
+  final Hand hand;
   final Role role;
 
   Me({
