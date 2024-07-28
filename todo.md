@@ -17,7 +17,6 @@
 - Timer
 - Allow max 8 connections per game
 
-- Before first round ending and not taking - 5 cards max on table
 
 - Waiting screen
 - End game screen
@@ -38,11 +37,15 @@
 - Mac
 - Windows
 
+- Improve UI
+
 - Deploy and publish
 
 - Games and State storing
 
 
+
+- Before first round ending and not taking - 5 cards max on table
 - duren previdnyi
 - 125
 - 1000
