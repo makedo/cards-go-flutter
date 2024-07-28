@@ -45,8 +45,5 @@
 
 - duren previdnyi
 - 125
-
-- monetisation ???
-
 - 1000
 - poker
