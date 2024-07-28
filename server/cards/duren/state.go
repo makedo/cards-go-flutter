@@ -37,8 +37,15 @@ func (s *State) areAllPlayersReady(playersAmount int) bool {
 	return playersAmount == len(s.readyPlayers)
 }
 
-func (s *State) addPlayer(player *Player) {
+func (s *State) addPlayer(player *Player) error {
+	for _, p := range s.players {
+		if p.id == player.id {
+			return errors.New("player already exists")
+		}
+	}
+
 	s.players = append(s.players, player)
+	return nil
 }
 
 func (s *State) confirm() error {
@@ -383,7 +390,7 @@ func (s *State) movePlayerToReadyList(id string) error {
 
 	for _, p := range s.readyPlayers {
 		if player == p {
-			return nil
+			return errors.New("player already in ready list")
 		}
 	}
 

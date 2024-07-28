@@ -2,12 +2,16 @@ package duren
 
 import (
 	"errors"
+	"sync"
 )
 
 type StateHandler struct {
 	state         State
 	playersAmount int
+	mutex         sync.Mutex
 }
+
+const MAX_PLAYERS = 4
 
 func NewStateHandler(players int) *StateHandler {
 	h := &StateHandler{playersAmount: players}
@@ -16,6 +20,9 @@ func NewStateHandler(players int) *StateHandler {
 }
 
 func (h *StateHandler) join(action JoinAction) (State, error) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
 	if !h.state.isStateWaiting() {
 		return h.state, errors.New("game is already started")
 	}
@@ -24,12 +31,15 @@ func (h *StateHandler) join(action JoinAction) (State, error) {
 		return h.state, errors.New("game is full")
 	}
 
-	h.state.addPlayer(NewPlayer(action.PlayerId))
+	err := h.state.addPlayer(NewPlayer(action.PlayerId))
 
-	return h.state, nil
+	return h.state, err
 }
 
 func (h *StateHandler) ready(action ReadyAction) (State, error) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
 	if !h.state.isStateWaiting() {
 		return h.state, errors.New("game is already started")
 	}
@@ -46,6 +56,9 @@ func (h *StateHandler) ready(action ReadyAction) (State, error) {
 }
 
 func (h *StateHandler) move(action MoveAction) (State, error) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
 	if !h.state.isStatePlaying() {
 		return h.state, errors.New("move error - game is not started")
 	}
@@ -78,6 +91,9 @@ func (h *StateHandler) move(action MoveAction) (State, error) {
 }
 
 func (h *StateHandler) take(action TakeAction) (State, error) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
 	if !h.state.isStatePlaying() {
 		return h.state, errors.New("game is not started")
 	}
@@ -93,6 +109,9 @@ func (h *StateHandler) take(action TakeAction) (State, error) {
 }
 
 func (h *StateHandler) confirm(action ConfirmAction) (State, error) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
 	if !h.state.isStatePlaying() {
 		return h.state, errors.New("game is not started")
 	}
@@ -132,7 +151,6 @@ func (h *StateHandler) confirm(action ConfirmAction) (State, error) {
 		if h.state.defender.confirmed || h.state.table.areAllCardsCovered() {
 			h.state.setNextAttaker()
 		}
-
 	}
 
 	return h.state, nil
